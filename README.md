@@ -6,28 +6,13 @@
 
 <a name="readme-top"></a>
 
-<!-- PROJECT SHIELDS -->
-<div align="center">
-
-<a href="[forks-url]">[![Forks][forks-shield]][forks-url]</a>
-<a href="[stars-url]">[![Stargazers][stars-shield]][stars-url]</a>
-<a href="[license-url]">[![MIT License][license-shield]][license-url]</a>
-
-</div>
-
 <!-- PROJECT LOGO -->
 <br />
 <div align="center">
-  <a href="https://github.com/caffeine-addictt/sharkech">
-    <img src="images/logo.png" alt="Logo" width="80" height="80">
-  </a>
-
   <h3 align="center">Sharkalyze</h3>
 
   <p align="center">
     An AI tool that revolutionizes payment security
-    <br />
-    <a href=""><strong>Explore the docs »</strong></a>
     <br />
     <br />
     <a href="https://github.com/caffeine-addictt/sharkech/issues">Report Bug</a>
@@ -39,8 +24,6 @@
 <!-- ABOUT THE PROJECT -->
 
 ## About The Project
-
-![Social Card](images/socialcard.png)
 
 WIP
 
@@ -55,25 +38,15 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
--
+- Python 3.12+
+- GNU/make
 
 ### Installation
 
 _Below is an example of how you can install and use Sharkalyze._
 
-1.
-2.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- DOCS -->
-
-## Documentation
-
-Our docs are [here]()!
-
-See the [open issues](https://github.com/caffeine-addictt/sharkech/issues)
-for a full list of proposed features (and known issues).
+1. Clone the repository: `git clone https://github.com/caffeine-addictt/sharkech.git`
+2. Run `make install` to install the dependencies.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -100,22 +73,6 @@ Read our [contributing guide](./CONTRIBUTING.md) for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-<!-- LICENSE -->
-
-## License
-
-Distributed under the MIT License. See [LICENSE.txt](./LICENSE.txt) for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- CONTACT -->
-
-## Contact
-
-Jun Xiang - [contact@ngjx.org](mailto:contact@ngjx.org)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 <!-- ACKNOWLEDGMENTS -->
 
 ## Acknowledgments
@@ -128,13 +85,3 @@ Jun Xiang - [contact@ngjx.org](mailto:contact@ngjx.org)
 - [Img Shields](https://shields.io)
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-
-[forks-shield]: https://img.shields.io/github/forks/caffeine-addictt/sharkech.svg?style=for-the-badge
-[forks-url]: https://github.com/caffeine-addictt/sharkech/network/members
-[stars-shield]: https://img.shields.io/github/stars/caffeine-addictt/sharkech.svg?style=for-the-badge&color=yellow
-[stars-url]: https://github.com/caffeine-addictt/sharkech/stargazers
-[license-shield]: https://img.shields.io/github/license/caffeine-addictt/sharkech.svg?style=for-the-badge
-[license-url]: https://github.com/caffeine-addictt/sharkech/blob/main/LICENSE
