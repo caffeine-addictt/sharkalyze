@@ -38,14 +38,15 @@ To get a local copy up and running follow these simple example steps.
 
 ### Prerequisites
 
--
+- Python 3.12+
+- GNU/make
 
 ### Installation
 
 _Below is an example of how you can install and use Sharkalyze._
 
-1.
-2.
+1. Clone the repository: `git clone https://github.com/caffeine-addictt/sharkech.git`
+2. Run `make install` to install the dependencies.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
