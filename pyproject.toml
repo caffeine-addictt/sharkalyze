@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "sharkech"
+name = "sharkalyze"
 version = "0.1.0"
 description = ""
 authors = ["AlexNg <contact@ngjx.org>"]

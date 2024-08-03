@@ -15,9 +15,9 @@
     An AI tool that revolutionizes payment security
     <br />
     <br />
-    <a href="https://github.com/caffeine-addictt/sharkech/issues">Report Bug</a>
+    <a href="https://github.com/caffeine-addictt/sharkalyze/issues">Report Bug</a>
     ·
-    <a href="https://github.com/caffeine-addictt/sharkech/issues">Request Feature</a>
+    <a href="https://github.com/caffeine-addictt/sharkalyze/issues">Request Feature</a>
   </p>
 </div>
 
@@ -45,7 +45,7 @@ To get a local copy up and running follow these simple example steps.
 
 _Below is an example of how you can install and use Sharkalyze._
 
-1. Clone the repository: `git clone https://github.com/caffeine-addictt/sharkech.git`
+1. Clone the repository: `git clone https://github.com/caffeine-addictt/sharkalyze.git`
 2. Run `make install` to install the dependencies.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
