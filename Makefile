@@ -36,7 +36,7 @@ install:
 ## test: Runs tests
 .PHONY: test
 test:
-	${PYTHON} -m poetry run pytest -vv
+	${PYTHON} -m poetry run pytest -vv --cov=. .
 
 ## lint: Lint code
 .PHONY: lint
