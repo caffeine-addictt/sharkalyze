@@ -1,0 +1,37 @@
+name: Run Test Suite
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: Python
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          language-version: 3.x
+
+      - name: Install dependencies
+        run: |
+          set -xe
+          echo "Installed dependencies"
+          make install
+
+      - name: Testing
+        run: |
+          set -xe
+          make test
