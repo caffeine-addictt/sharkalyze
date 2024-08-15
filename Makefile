@@ -31,6 +31,12 @@ help:
 	@sed -n 's/^## //p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
 
+## dev: Start client and server in development mode
+.PHONY: dev
+dev:
+	${DOCKER} compose up --build
+
+
 ## install: Install dependencies
 .PHONY: install
 install: install/python install/npm
@@ -97,7 +103,7 @@ format/npm:
 
 ## clean: Clean up build artifacts
 .PHONY: clean
-clean:
+clean: clean/python clean/npm clean/cargo clean/docker
 
 .PHONY: clean/python
 clean/python:
@@ -113,10 +119,24 @@ clean/npm:
 clean/cargo:
 	 ${CARGO} clean
 
+.PHONY: clean/docker
+clean/docker:
+	${DOCKER} system prune -f
+
 
 ## tidy: Clean up code artifacts
 .PHONY: tidy
-tidy:
+tidy: tidy/python tidy/docker
+
+.PHONY: tidy/docker
+tidy/docker:
+	${DOCKER} compose down
+	${DOCKER} compose rm -f 2> ${NULL}
+	${DOCKER} rmi sharkalyze-client 2> ${NULL}
+	${DOCKER} rmi sharkalyze-server 2> ${NULL}
+
+.PHONY: tidy/python
+tidy/python:
 	${RM_CMD} .coverage
 	${RM_CMD} .pytest_cache
 	${RM_CMD} .ruff_cache
