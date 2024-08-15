@@ -1,0 +1,26 @@
+services:
+  client:
+    container_name: sharkalyze-client
+    image: sharkalyze-client:latest
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    ports:
+      - 8080:8080
+    develop:
+      watch:
+        - path: client
+          action: rebuild
+
+  server:
+    container_name: sharkalyze-server
+    image: sharkalyze-server:latest
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    ports:
+      - 3000:3000
+    develop:
+      watch:
+        - path: server/src
+          action: rebuild

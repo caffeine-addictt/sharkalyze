@@ -1,14 +1,26 @@
 # This file is for the labeler workflow
 # Documentation https://github.com/marketplace/actions/labeler
 
-Documentation:
+documentation:
   - changed-files:
-      - any-glob-to-any-file: [docs/**, './*.{md,mdx}']
+      - any-glob-to-any-file: [docs/**, "./*.{md,mdx}"]
 
-'Type: Test':
+tests:
   - changed-files:
       - any-glob-to-any-file: [tests/**, ./*test*]
 
-'Type: CI':
+ci:
   - changed-files:
       - any-glob-to-any-file: [.github/workflows/**]
+
+server:
+  - changed-files:
+      - any-glob-to-any-file: [server/**]
+
+client:
+  - changed-files:
+      - any-glob-to-any-file: [client/**]
+
+parser:
+  - changed-files:
+      - any-glob-to-any-file: [parser/**]

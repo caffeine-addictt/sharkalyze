@@ -1,0 +1,14 @@
+{
+  "private": false,
+  "scripts": {
+    "lint": "npm run lint --workspaces",
+    "lint:fix": "npm run lint:fix --workspaces",
+    "test": "npm run test --workspaces",
+    "dev": "npm run dev --workspaces"
+  },
+  "workspaces": {
+    "packages": [
+      "client"
+    ]
+  }
+}

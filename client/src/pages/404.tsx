@@ -1,0 +1,25 @@
+/**
+ * SPDX-FileCopyrightText: 2024 Ng Jun Xiang <contact@ngjx.org>
+ *
+ * SPDX-License-Identifier: GPL-3.0-only
+ */
+
+import type { PageComponent } from '@pages/route-map';
+import { cn } from '@utils/tailwind';
+
+const NotFound: PageComponent = ({ className, ...props }) => {
+  return (
+    <div
+      {...props}
+      className={cn(className, 'flex-col gap-2 items-center justify-center')}
+    >
+      <h1 className="text-4xl font-bold">Page Not Found</h1>
+      <p className="text-lg">Sorry, the page you requested was not found.</p>
+
+      <a href="/" className="mt-20">
+        Return Home
+      </a>
+    </div>
+  );
+};
+export default NotFound;
