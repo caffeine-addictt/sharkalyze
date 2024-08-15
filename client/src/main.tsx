@@ -38,7 +38,7 @@ export const Layout = (): JSX.Element => {
   const location = useLocation();
 
   return (
-    <div className="dark:bg-background-dark min-w-full max-w-full flex-col flex bg-background-light text-text-light  dark:text-text-dark">
+    <div className="flex min-w-full max-w-full flex-col bg-background-light text-text-light dark:bg-background-dark  dark:text-text-dark">
       <main className="flex min-h-screen flex-col">
         <Navbar />
 
