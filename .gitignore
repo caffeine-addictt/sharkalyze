@@ -13,6 +13,9 @@ __pycache__/
 
 .coverage
 
+# Rust stuff
+target/
+
 # Logs
 logs
 *.log
