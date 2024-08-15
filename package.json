@@ -1,0 +1,8 @@
+{
+  "private": false,
+  "workspaces": {
+    "packages": [
+      "client"
+    ]
+  }
+}
