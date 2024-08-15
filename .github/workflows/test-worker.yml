@@ -47,13 +47,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          entrypoint: server
 
       - name: Build
         run: |
           set -xe
-          docker build .
+          docker build . -f server/Dockerfile
 
   client-test:
     name: Node
@@ -87,13 +85,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          entrypoint: client
 
       - name: Build
         run: |
           set -xe
-          docker build .
+          docker build . -f client/Dockerfile
 
   # TODO: Rust
 
