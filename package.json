@@ -2,7 +2,7 @@
   "private": false,
   "scripts": {
     "lint": "npm run lint --workspaces",
-    "liint:fix": "npm run lint --workspaces --fix",
+    "lint:fix": "npm run lint:fix --workspaces",
     "test": "npm run test --workspaces",
     "dev": "npm run dev --workspaces"
   },
