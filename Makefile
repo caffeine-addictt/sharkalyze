@@ -1,4 +1,7 @@
 PYTHON:=python
+NPM:=npm
+CARGO:=cargo
+DOCKER:=docker
 
 ifeq ($(OS),Windows_NT)
 RM_CMD:=rd /s /q
@@ -27,31 +30,96 @@ help:
 	@echo 'Commands:'
 	@sed -n 's/^## //p' ${MAKEFILE_LIST} | column -t -s ':' |  sed -e 's/^/ /'
 
+
 ## install: Install dependencies
 .PHONY: install
-install:
+install: install/python install/npm
+
+.PHONY: install/python
+install/python:
 	${PYTHON} -m pip install poetry
 	${PYTHON} -m poetry install
 
+.PHONY: install/npm
+install/npm:
+	${NPM} i
+
+
 ## test: Runs tests
 .PHONY: test
-test:
+test: test/python test/npm test/cargo
+
+.PHONY: test/python
+test/python:
 	${PYTHON} -m poetry run pytest -vv --cov=. .
+
+.PHONY: test/npm
+test/npm:
+	${NPM} run test
+
+.PHONY: test/cargo
+test/cargo:
+	${CARGO} test
+
 
 ## lint: Lint code
 .PHONY: lint
-lint:
+lint: lint/python lint/npm lint/cargo
+
+.PHONY: lint/python
+lint/python:
 	${PYTHON} -m poetry run ruff format --check
+
+.PHONY: lint/npm
+lint/npm:
+	${NPM} run lint
+
+.PHONY: lint/cargo
+lint/cargo:
+	${CARGO} clippy
+
 
 ## format: Format code
 .PHONY: format
-format:
+format: format/python format/npm format/cargo
+
+.PHONY: format/python
+format/python:
 	${PYTHON} -m poetry run ruff format
+
+.PHONY: format/npm
+format/npm:
+	${NPM} run lint:fix
+
+.PHONY: format/cargo
+	${CARGO} fmt
+
+
+## clean: Clean up build artifacts
+.PHONY: clean
+clean:
+
+.PHONY: clean/python
+clean/python:
+	${RM_CMD} venv
+
+.PHONY: clean/npm
+clean/npm:
+	${RM_CMD} client/dist
+	${RM_CMD} client/node_modules
+	${RM_CMD} node_modules
+
+.PHONY: clean/cargo
+clean/cargo:
+	 ${CARGO} clean
+
 
 ## tidy: Clean up code artifacts
 .PHONY: tidy
 tidy:
+	${RM_CMD} .coverage
 	${RM_CMD} .pytest_cache
 	${RM_CMD} .ruff_cache
 	${PYTHON} -Bc "for p in __import__('pathlib').Path('.').rglob('*.py[co]'): p.unlink()"
 	${PYTHON} -Bc "for p in __import__('pathlib').Path('.').rglob('__pycache__'): p.rmdir()"
+
