@@ -34,6 +34,7 @@ help:
 ## dev: Start client and server in development mode
 .PHONY: dev
 dev:
+	${DOCKER} compose up --watch
 
 
 ## prod: Run client server in production mode
