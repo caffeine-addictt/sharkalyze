@@ -1,87 +1,118 @@
-<!-- Allow HTML -->
-<!-- markdownlint-disable MD033 -->
+###### _<div align="right"><sub>// made with <3</sub></div>_
 
-<!-- Allow HTML top-level heading -->
-<!-- markdownlint-disable MD041 -->
-
-<a name="readme-top"></a>
-
-<!-- PROJECT LOGO -->
-<br />
 <div align="center">
-  <h3 align="center">Sharkalyze</h3>
 
-  <p align="center">
-    An AI tool that revolutionizes payment security
-    <br />
-    <br />
-    <a href="https://github.com/caffeine-addictt/sharkalyze/issues">Report Bug</a>
-    ·
-    <a href="https://github.com/caffeine-addictt/sharkalyze/issues">Request Feature</a>
-  </p>
+<!-- Project Banner -->
+
+# Sharkalyze
+
+<br>
+
+<!-- Badges -->
+
+[![badge-license]][license]
+![badge-language]
+[![badge-pr]][prs]
+[![badge-issues]][issues]
+
+<br><br>
+
+<!-- Description -->
+
+A parser written in rust, AI done with Python, Server done with Python
+and Website done with Vite.
+
+Revolutionizing payment security
+
+<br><br>
+
+---
+
+<!-- TOC -->
+
+**[<kbd> <br> Requirements <br> </kbd>](#requirements)**
+**[<kbd> <br> Quick Start <br> </kbd>](#quick-start)**
+**[<kbd> <br> Contribute <br> </kbd>][contribute]**
+
+---
+
+<br>
+
 </div>
 
-<!-- ABOUT THE PROJECT -->
+# Requirements
 
-## About The Project
+- GNU/Make
+- Docker
+- Rust
+- Python
+- Node.Js
 
-WIP
+<div align="right">
+  <br>
+  <a href="#-made-with-3"><kbd> <br> 🡅 <br> </kbd></a>
+</div>
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+# Quick Start
 
-<!-- GETTING STARTED -->
+### 1. Clone the repository
 
-## Getting Started
+```sh
+git clone https://github.com/caffeine-addictt/sharkalyze
+```
 
-This is an example of how you can set up your project locally.
-To get a local copy up and running follow these simple example steps.
+### 2. Install dependencies
 
-### Prerequisites
+```sh
+make install
+```
 
-- Python 3.12+
-- GNU/make
+### 3. Start the prototype
 
-### Installation
+Run the following command in your terminal, then view the prototype in your browser.
 
-_Below is an example of how you can install and use Sharkalyze._
+| Service | Port                  |
+| :------ | :-------------------: |
+| Client  | [http://localhost:8080](http://localhost:8080) |
+| Server  | [http://localhost:3000](http://localhost:3000) |
 
-1. Clone the repository: `git clone https://github.com/caffeine-addictt/sharkalyze.git`
-2. Run `make install` to install the dependencies.
+```sh
+make dev
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<div align="right">
+  <br>
+  <a href="#-made-with-3"><kbd> <br> 🡅 <br> </kbd></a>
+</div>
 
-<!-- CONTRIBUTING -->
+## Special Thanks
 
-## Contributing
+- **[Caffeine Addictt][caffeine-addictt]** - _For the repository template_
+- **[Img Shields][img-shields]** - _For the awesome README badges_
+- **[Hyprland][hyprland]** - _For showing how to make beautiful READMEs_
+- **[Hyprdots][hyprdots]** - _For showing how to make beautiful READMEs_
 
-Contributions are what make the open source community
-such an amazing place to learn, inspire, and create.
-Any contributions you make are **greatly appreciated**. ( ˶ˆᗜˆ˵ )
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 
-If you have a suggestion that would make this better,
-please fork the repo and create a pull request.
-You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+[prs]: https://github.com/caffeine-addictt/sharkalyze/pulls
+[issues]: https://github.com/caffeine-addictt/sharkalyze/issues
+[license]: https://github.com/caffeine-addictt/sharkalyze/blob/main/LICENSE
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+<!---------------- {{Links}} ---------------->
 
-Read our [contributing guide](./CONTRIBUTING.md) for more information.
+[contribute]: https://github.com/caffeine-addictt/sharkalyze/blob/main/CONTRIBUTING.md
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+<!---------------- {{Thanks}} ---------------->
 
-<!-- ACKNOWLEDGMENTS -->
+[caffeine-addictt]: https://github.com/caffeine-addictt
+[hyprland]: https://github.com/hyprwm/Hyprland
+[hyprdots]: https://github.com/prasanthrangan/hyprdots
+[img-shields]: https://shields.io
 
-## Acknowledgments
+<!---------------- {{Badges}} ---------------->
 
-- [Repository Template](https://github.com/caffeine-addictt/template)
-- [Choose an Open Source License](https://choosealicense.com)
-- [GitHub Emoji Cheat Sheet](https://www.webpagefx.com/tools/emoji-cheat-sheet)
-- [Malven's Flexbox Cheatsheet](https://flexbox.malven.co/)
-- [Malven's Grid Cheatsheet](https://grid.malven.co/)
-- [Img Shields](https://shields.io)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+[badge-issues]: https://img.shields.io/github/issues/caffeine-addictt/sharkalyze
+[badge-pr]: https://img.shields.io/github/issues-pr/caffeine-addictt/sharkalyze
+[badge-language]: https://img.shields.io/github/languages/top/caffeine-addictt/sharkalyze
+[badge-license]: https://img.shields.io/github/license/caffeine-addictt/sharkalyze
