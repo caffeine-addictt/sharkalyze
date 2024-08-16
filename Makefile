@@ -1,6 +1,7 @@
 PYTHON:=python
 NPM:=npm
 CARGO:=cargo
+RUSTUP:=rustup
 DOCKER:=docker
 
 ifeq ($(OS),Windows_NT)
@@ -51,7 +52,7 @@ down:
 
 ## install: Install dependencies
 .PHONY: install
-install: install/python install/npm
+install: install/python install/npm install/cargo
 
 .PHONY: install/python
 install/python:
@@ -61,6 +62,11 @@ install/python:
 .PHONY: install/npm
 install/npm:
 	${NPM} i
+
+.PHONY: install/cargo
+install/cargo:
+	${RUSTUP} component add clippy
+	${RUSTUP} component add rustfmt
 
 
 ## test: Runs tests
