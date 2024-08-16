@@ -21,6 +21,12 @@ jobs:
   changed-files:
     name: Changed Files
     runs-on: ubuntu-latest
+    outputs:
+      server-test: ${{ steps.changed-files.outputs.server-test_any_modified == 'true' }}
+      server-build: ${{ steps.changed-files.outputs.server-build_any_modified == 'true' }}
+      npm-test: ${{ steps.changed-files.outputs.npm-test_any_modified == 'true' }}
+      npm-build: ${{ steps.changed-files.outputs.npm-build_any_modified == 'true' }}
+      rust: ${{ steps.changed-files.outputs.rust_any_modified == 'true' }}
 
     steps:
       - name: Checkout repository
@@ -30,6 +36,7 @@ jobs:
 
       - name: Find changed files
         uses: tj-actions/changed-files@v44
+        id: changed-files
         with:
           files_yaml: |
             common: &common

@@ -17,6 +17,10 @@ jobs:
   changed-files:
     name: Changed Files
     runs-on: ubuntu-latest
+    outputs:
+      lint-python: ${{ steps.changed-files.outputs.lint-python_any_modified == 'true' }}
+      lint-npm: ${{ steps.changed-files.outputs.lint-npm_any_modified == 'true' }}
+      lint-rust: ${{ steps.changed-files.outputs.lint-rust_any_modified == 'true' }}
 
     steps:
       - name: Checkout repository
@@ -26,6 +30,7 @@ jobs:
 
       - name: Find changed files
         uses: tj-actions/changed-files@v44
+        id: changed-files
         with:
           files_yaml: |
             common: &common
