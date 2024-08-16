@@ -15,6 +15,7 @@ __pycache__/
 
 # Rust stuff
 target/
+.sharkalyze_cache/
 
 # Logs
 logs

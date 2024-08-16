@@ -6,6 +6,8 @@ use core::panic;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
 
+mod cache;
+
 /// HTML scrapper and parser
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -53,5 +55,12 @@ fn main() {
         }
     };
 
+    // Ensure cache directory exists
+    let cache_dir = match cache::ensure_cache_dir() {
+        Ok(c) => c,
+        Err(e) => panic!("Failed to create cache dir: {}", e),
+    };
+
     println!("{:?}", urls);
+    println!("{:?}", cache_dir);
 }
