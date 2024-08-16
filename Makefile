@@ -17,9 +17,9 @@ endif
 
 default: all
 
-## default: Runs build and test
+## default: Installs dependencies and prints this help message
 .PHONY: default
-all: lint test
+all: install help
 
 # =================================== HELPERS =================================== #
 
