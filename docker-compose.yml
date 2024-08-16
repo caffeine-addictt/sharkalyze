@@ -1,7 +1,6 @@
 services:
   client:
     container_name: sharkalyze-client
-    image: sharkalyze-client:latest
     build:
       context: .
       dockerfile: client/Dockerfile
@@ -14,7 +13,6 @@ services:
 
   server:
     container_name: sharkalyze-server
-    image: sharkalyze-server:latest
     build:
       context: .
       dockerfile: server/Dockerfile
