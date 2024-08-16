@@ -1,6 +1,7 @@
 PYTHON:=python
 NPM:=npm
 CARGO:=cargo
+RUSTUP:=rustup
 DOCKER:=docker
 
 ifeq ($(OS),Windows_NT)
@@ -16,9 +17,9 @@ endif
 
 default: all
 
-## default: Runs build and test
+## default: Installs dependencies and prints this help message
 .PHONY: default
-all: lint test
+all: install help
 
 # =================================== HELPERS =================================== #
 
@@ -51,7 +52,8 @@ down:
 
 ## install: Install dependencies
 .PHONY: install
-install: install/python install/npm
+install: install/python install/npm install/cargo
+	@echo "👍 Installed dependencies!"
 
 .PHONY: install/python
 install/python:
@@ -62,10 +64,16 @@ install/python:
 install/npm:
 	${NPM} i
 
+.PHONY: install/cargo
+install/cargo:
+	${RUSTUP} component add clippy
+	${RUSTUP} component add rustfmt
+
 
 ## test: Runs tests
 .PHONY: test
 test: test/python test/npm test/cargo
+	@echo "👍 Test passing!"
 
 .PHONY: test/python
 test/python:
@@ -83,6 +91,7 @@ test/cargo:
 ## lint: Lint code
 .PHONY: lint
 lint: lint/python lint/npm lint/cargo
+	@echo "👍 Linting passing!"
 
 .PHONY: lint/python
 lint/python:
@@ -100,6 +109,7 @@ lint/cargo:
 ## format: Format code
 .PHONY: format
 format: format/python format/npm format/cargo
+	@echo "👍 Formatted code!"
 
 .PHONY: format/python
 format/python:
@@ -116,6 +126,7 @@ format/npm:
 ## clean: Clean up build artifacts
 .PHONY: clean
 clean: clean/python clean/npm clean/cargo clean/docker
+	@echo "👍 Cleaned up build artifacts!"
 
 .PHONY: clean/python
 clean/python:
@@ -139,6 +150,7 @@ clean/docker:
 ## tidy: Clean up code artifacts
 .PHONY: tidy
 tidy: tidy/python tidy/docker
+	@echo "👍 Cleaned up code artifacts!"
 
 .PHONY: tidy/docker
 tidy/docker: down

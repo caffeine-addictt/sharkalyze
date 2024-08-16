@@ -10,6 +10,9 @@ on:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   changed-files:
     name: Changed Files
@@ -42,6 +45,12 @@ jobs:
               - '!client/Dockerfile'
               - package.json
               - package-lock.json
+
+            lint-rust:
+              - *common
+              - parser/**
+              - Cargo.toml
+              - Cargo.lock
 
   python:
     name: Python
@@ -93,13 +102,37 @@ jobs:
           set -xe
           make lint/npm
 
-  # TODO: Rust
+  rust:
+    name: Rust
+    runs-on: ubuntu-latest
+    needs: [changed-files]
+    if: ${{ needs.changed-files.outputs.lint-rust == 'true' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        run: |
+          set -xe
+          rustup update stable
+          rustup default stable
+
+      - name: Install dependencies
+        run: |
+          set -xe
+          make install/rust
+
+      - name: Lint
+        run: |
+          set -xe
+          make lint/rust
 
   check:
     if: always()
     name: Linting Successful
     runs-on: ubuntu-latest
-    needs: [python, npm]
+    needs: [python, npm, rust]
 
     steps:
       - name: Whether the whole test suite passed
