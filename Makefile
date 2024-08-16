@@ -34,7 +34,19 @@ help:
 ## dev: Start client and server in development mode
 .PHONY: dev
 dev:
+	${DOCKER} compose up --watch
+
+
+## prod: Run client server in production mode
+.PHONY: prod
+prod:
 	${DOCKER} compose up --build
+
+
+## down: Kill client and server
+.PHONY: down
+down:
+	${DOCKER} compose down 2> ${NULL}
 
 
 ## install: Install dependencies
@@ -129,8 +141,7 @@ clean/docker:
 tidy: tidy/python tidy/docker
 
 .PHONY: tidy/docker
-tidy/docker:
-	${DOCKER} compose down
+tidy/docker: down
 	${DOCKER} compose rm -f 2> ${NULL}
 	${DOCKER} rmi sharkalyze-client 2> ${NULL}
 	${DOCKER} rmi sharkalyze-server 2> ${NULL}

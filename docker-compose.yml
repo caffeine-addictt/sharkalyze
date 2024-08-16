@@ -1,12 +1,13 @@
 services:
   client:
     container_name: sharkalyze-client
-    image: sharkalyze-client:latest
     build:
       context: .
       dockerfile: client/Dockerfile
     ports:
       - 8080:8080
+    depends_on:
+      - server
     develop:
       watch:
         - path: client
@@ -14,7 +15,6 @@ services:
 
   server:
     container_name: sharkalyze-server
-    image: sharkalyze-server:latest
     build:
       context: .
       dockerfile: server/Dockerfile
@@ -23,4 +23,7 @@ services:
     develop:
       watch:
         - path: server/src
+          action: rebuild
+
+        - path: poetry.lock
           action: rebuild

@@ -12,12 +12,16 @@ please follow it in all your interactions with the project.
 <!-- prettier-ignore-start -->
 <!--toc:start-->
 
-1. [Pull Request Process](#pull-request-process)
-2. [Issue Report Process](#issue-report-process)
-3. [Commit Message Guidelines](#commit-message-guidelines)
-4. [Code Quality](#code-quality)
+- [**Contributing**](#contributing)
+  - [Table of Contents](#table-of-contents)
+  - [Pull Request Process](#pull-request-process)
+  - [Issue Report Process](#issue-report-process)
+  - [Commit Message Guidelines](#commit-message-guidelines)
+  - [Code Quality](#code-quality)
     - [Testing](#testing)
     - [Linting](#linting)
+    - [Tidying Code](#tidying-code)
+    - [Cleaning Up](#cleaning-up)
 
 <!--toc:end-->
 <!-- prettier-ignore-end -->
@@ -30,8 +34,7 @@ please follow it in all your interactions with the project.
 3. Update the README.md with details of changes to the interface;
    this includes new environment variables, exposed ports,
    valid file locations and container parameters.
-4. Increase the version numbers in any examples files and the README.md
-   that this Pull Request would represent. The versioning scheme we use is [SemVer](http://semver.org/).
+4. Ensure that the PR title follows our [commit message guidelines](#commit-message-guidelines).
 5. You may merge the Pull Request once you have the sign-off of two other developers,
    or if you do not have permission to do that, you may request the second reviewer
    to merge it for you.
@@ -74,23 +77,40 @@ git commit -m "docs: Moved README.md"
 
 ### Testing
 
-_Replace this with what you test your code with._
 Please ensure that tests are updated and pass before merging a Pull Request.
 
 ```sh
 # To test your code, run:
-# Replace this with your test command
+make test
 ```
 
 ### Linting
 
-_Replace this with what you lint your code with._
 Please ensure that your code passes linting before merging a Pull Request.
 
 ```sh
 # To lint your code, run:
-# Replace this with your lint command
+make lint
 
 # To fix any linting errors, run:
-# Replace this with your fix command
+make format
+```
+
+### Tidying Code
+
+This removes build artifacts.
+
+```sh
+# To tidy your code, run:
+make tidy
+```
+
+### Cleaning Up
+
+This is a more aggressive version of `tidy`.
+This also removes `venv` and `node_modules`.
+
+```sh
+# To clean up your environment, run:
+make clean
 ```
