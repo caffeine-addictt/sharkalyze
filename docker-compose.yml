@@ -24,3 +24,6 @@ services:
       watch:
         - path: server/src
           action: rebuild
+
+        - path: poetry.lock
+          action: rebuild
