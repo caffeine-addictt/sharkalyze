@@ -33,7 +33,7 @@ jobs:
         with:
           files_yaml: |
             common: &common
-              - .github/workflows/linting.yml
+              - .github/workflows/test-worker.yml
               - Makefile
 
             server-test:
@@ -44,18 +44,22 @@ jobs:
               - pyproject.toml
 
             server-build:
+              - *common
               - server/Dockerfile
               - server/src/**
 
             npm-test:
+              - *common
               - client/**
               - '!client/Dockerfile'
 
             npm-build:
+              - *common
               - client/src/**
               - client/Dockerfile
 
             rust:
+              - *common
               - parser/**
               - Cargo.toml
               - Cargo.lock
