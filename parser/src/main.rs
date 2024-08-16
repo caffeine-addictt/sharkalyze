@@ -1,10 +1,19 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 use clap::Parser;
 use url::Url;
 
-use core::panic;
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+
+mod cache;
+
+fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
+    let file = File::open(path).with_context(|| format!("failed to open file: {path}"))?;
+    Ok(BufReader::new(file)
+        .lines()
+        .map(|ln| Url::parse(&ln?).context("Failed to parse url"))
+        .collect())
+}
 
 /// HTML scrapper and parser
 #[derive(Parser, Debug)]
@@ -20,38 +29,31 @@ struct Args {
 
 impl Args {
     /// Parse url or file and return list of urls
-    fn get_urls(&self) -> Result<Vec<String>> {
-        // Return if is url
+    fn get_urls(&self) -> Result<Vec<Result<Url>>> {
         match Url::parse(&self.url_or_path) {
-            Ok(url) => Ok(vec![url.to_string()]),
+            Ok(url) => Ok(vec![Ok(url)]),
             Err(e) => {
                 if self.debug {
-                    println!("Error parsing url: {}", e);
+                    eprintln!(
+                        "failed to parse url due to reason: {e}\n\
+                        falling back to reading as file"
+                    );
                 }
-
-                // Treat url as local file path
-                let reader = BufReader::new(File::open(&self.url_or_path)?);
-                Ok(reader
-                    .lines()
-                    .map(|s| {
-                        Url::parse(&s.expect("Failed to read line"))
-                            .expect("Failed to parse url")
-                            .to_string()
-                    })
-                    .collect())
+                Ok(parse_from_file(&self.url_or_path)?)
             }
         }
     }
 }
 
-fn main() {
+fn main() -> Result<()> {
     let args = Args::parse();
-    let urls = match args.get_urls() {
-        Ok(urls) => urls,
-        Err(e) => {
-            panic!("{}", e);
-        }
-    };
+    let urls = args.get_urls()?;
+
+    // Ensure cache directory exists
+    let cache = cache::Cache::new(cache::ensure_cache_dir()?);
 
     println!("{:?}", urls);
+    println!("{:?}", cache.cached_files);
+
+    Ok(())
 }
