@@ -34,6 +34,11 @@ help:
 ## dev: Start client and server in development mode
 .PHONY: dev
 dev:
+
+
+## prod: Run client server in production mode
+.PHONY: prod
+prod:
 	${DOCKER} compose up --build
 
 
