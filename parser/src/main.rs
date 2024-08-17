@@ -6,12 +6,13 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 mod cache;
+mod weburl;
 
 fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
     let file = File::open(path).with_context(|| format!("failed to open file: {path}"))?;
     Ok(BufReader::new(file)
         .lines()
-        .map(|ln| Url::parse(&ln?).context("Failed to parse url"))
+        .map(|ln| weburl::parse_url(&ln?))
         .collect())
 }
 
@@ -30,7 +31,7 @@ struct Args {
 impl Args {
     /// Parse url or file and return list of urls
     fn get_urls(&self) -> Result<Vec<Result<Url>>> {
-        match Url::parse(&self.url_or_path) {
+        match weburl::parse_url(&self.url_or_path) {
             Ok(url) => Ok(vec![Ok(url)]),
             Err(e) => {
                 if self.debug {
