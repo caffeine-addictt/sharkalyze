@@ -17,6 +17,7 @@ quote_type = single
 charset = utf-8
 indent_style = space
 indent_size = 4
+quote_style = double
 
 # Rust
 [*.rs]
