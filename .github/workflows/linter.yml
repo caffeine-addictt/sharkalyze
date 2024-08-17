@@ -43,6 +43,7 @@ jobs:
               - '!server/Dockerfile'
               - poetry.lock
               - pyproject.toml
+              - ruff.toml
 
             lint-npm:
               - *common
