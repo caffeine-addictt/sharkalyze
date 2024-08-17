@@ -173,6 +173,7 @@ dependencies = [
  "clap",
  "filenamify",
  "lazy_static",
+ "regex",
  "url",
 ]
 
