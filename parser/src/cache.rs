@@ -1,40 +1,50 @@
-use anyhow::Result;
+use anyhow::{Context, Result};
 
-use std::collections::HashSet;
 use std::env;
 use std::fs;
 use std::path::PathBuf;
+use url::Url;
+
+use filenamify::filenamify;
 
 const CACHE_DIR: &str = ".sharkalyze_cache";
 
 pub struct Cache {
     pub pathbuf: PathBuf,
-    pub cached_files: HashSet<String>,
+    debug: bool,
 }
 
 impl Cache {
-    pub fn new(pathbuf: PathBuf) -> Self {
-        let mut cached_files: HashSet<String> = HashSet::new();
-        for entry in pathbuf.read_dir().unwrap() {
-            cached_files.insert(entry.unwrap().file_name().into_string().unwrap());
-        }
-
-        Cache {
-            pathbuf,
-            cached_files,
-        }
+    pub fn new(pathbuf: PathBuf, debug: bool) -> Self {
+        Cache { pathbuf, debug }
     }
 
     /// Check if the page is already cached
     /// Returns the file PathBuf if cached
-    fn is_cached(&self, url: &str) -> Option<PathBuf> {
-        let cached_file = self.pathbuf.join(format!("{}.txt", url));
+    pub fn is_cached(&self, url: &Url) -> Option<PathBuf> {
+        let cached_file = self.get_filename(url).ok()?;
+
+        if self.debug {
+            println!("Checking if {} exists", cached_file.display());
+        }
 
         if cached_file.exists() {
             Some(cached_file)
         } else {
             None
         }
+    }
+
+    /// Get filename based on a URL
+    pub fn get_filename(&self, url: &Url) -> Result<PathBuf> {
+        let filename = format!(
+            "{}{}.txt",
+            url.host_str()
+                .with_context(|| format!("could not resolve host for {url}"))?,
+            url.path()
+        );
+
+        Ok(self.pathbuf.join(filenamify(filename)))
     }
 }
 

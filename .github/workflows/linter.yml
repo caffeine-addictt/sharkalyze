@@ -126,12 +126,12 @@ jobs:
       - name: Install dependencies
         run: |
           set -xe
-          make install/rust
+          make install/cargo
 
       - name: Lint
         run: |
           set -xe
-          make lint/rust
+          make lint/cargo
 
   check:
     if: always()

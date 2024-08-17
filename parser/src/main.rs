@@ -50,10 +50,23 @@ fn main() -> Result<()> {
     let urls = args.get_urls()?;
 
     // Ensure cache directory exists
-    let cache = cache::Cache::new(cache::ensure_cache_dir()?);
+    let cache = cache::Cache::new(cache::ensure_cache_dir()?, args.debug);
+
+    for to_fetch in urls.iter().flatten() {
+        if let Some(path) = cache.is_cached(to_fetch) {
+            if args.debug {
+                println!(
+                    "Found in cache for {to_fetch} at {}, skipping...",
+                    path.display()
+                );
+            }
+            continue;
+        }
+
+        // TODO: Http GET
+    }
 
     println!("{:?}", urls);
-    println!("{:?}", cache.cached_files);
 
     Ok(())
 }
