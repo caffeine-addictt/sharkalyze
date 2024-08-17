@@ -50,10 +50,9 @@ fn main() -> Result<()> {
     let urls = args.get_urls()?;
 
     // Ensure cache directory exists
-    let cache = cache::Cache::new(cache::ensure_cache_dir()?);
+    let cache = cache::Cache::new(cache::ensure_cache_dir()?, args.debug);
 
     println!("{:?}", urls);
-    println!("{:?}", cache.cached_files);
 
     Ok(())
 }
