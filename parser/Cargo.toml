@@ -7,3 +7,4 @@ edition = "2021"
 anyhow = "1.0.86"
 clap = { version = "4.5.13", features = ["derive"] }
 url = "2.5.2"
+filenamify = "0.1"
