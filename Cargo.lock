@@ -172,6 +172,7 @@ dependencies = [
  "anyhow",
  "clap",
  "filenamify",
+ "lazy_static",
  "url",
 ]
 
