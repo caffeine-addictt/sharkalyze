@@ -12,6 +12,5 @@ def init_app() -> Flask:
 
 
 app = init_app()
-app.run()
 
 __all__ = ["app"]
