@@ -4,11 +4,18 @@
     "lint": "npm run lint --workspaces",
     "lint:fix": "npm run lint:fix --workspaces",
     "test": "npm run test --workspaces",
-    "dev": "npm run dev --workspaces"
+    "dev": "npm run dev --workspaces",
+    "pre-commit": "make lint"
   },
+  "pre-commit": [
+    "pre-commit"
+  ],
   "workspaces": {
     "packages": [
       "client"
     ]
+  },
+  "devDependencies": {
+    "pre-commit": "^1.2.2"
   }
 }
