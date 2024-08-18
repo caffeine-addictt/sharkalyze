@@ -3,6 +3,11 @@ FROM rust:1.80.1-slim AS builder-stage
 
 WORKDIR /app
 
+# Install and cache pkgconf
+RUN \
+  apt-get update \
+  && apt-get install --no-install-recommends -y pkgconf libssl-dev
+
 # Set build target and cache deps
 COPY Cargo.toml Cargo.lock ./
 COPY parser/Cargo.toml ./parser/
