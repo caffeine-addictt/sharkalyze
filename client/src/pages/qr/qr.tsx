@@ -6,7 +6,7 @@ import '../../styles/qr.css';
 
 // Qr Scanner
 import QrScanner from 'qr-scanner';
-import QrFrame from '../../assets/qr-frame.jpg';
+import QrFrame from '../../assets/qr-frame.svg';
 
 const QrReader: PageComponent = () => {
   // QR States
