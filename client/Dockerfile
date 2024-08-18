@@ -11,19 +11,15 @@ RUN npm install -dd
 COPY client/ .
 RUN npm run build
 
-
 ## Stage 2: Run
-FROM busybox:1.36.1 AS deploy-stage
+FROM nginx:alpine3.20-slim
 
-# Create user
-RUN adduser -D static
-USER static
-
-WORKDIR /home/static
-COPY --from=build-stage /app/dist/ .
+# Copy over
+COPY client/nginx.conf /etc/nginx/conf.d/default.conf
+COPY --from=build-stage /app/dist /var/www/html
 
 # Expose port
 EXPOSE 8080
 
 # Run
-CMD ["busybox", "httpd", "-f", "-v", "-p", "8080"]
+ENTRYPOINT ["nginx", "-g", "daemon off;"]
