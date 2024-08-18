@@ -46,7 +46,8 @@ impl Args {
     }
 }
 
-fn main() -> Result<()> {
+#[tokio::main]
+async fn main() -> Result<()> {
     let args = Args::parse();
     let urls = args.get_urls()?;
 
