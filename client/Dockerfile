@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy, install and cache deps
 COPY client/package*.json ./
-RUN npm install
+RUN npm install -dd
 
 # Copy and build source
 COPY client/ .
