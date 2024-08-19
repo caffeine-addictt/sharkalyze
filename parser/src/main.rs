@@ -1,9 +1,12 @@
 use anyhow::{Context, Result};
 use clap::Parser;
+// use futures_util::StreamExt;
+use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
 use url::Url;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
+use std::time::Instant;
 
 mod cache;
 mod status;
@@ -59,7 +62,27 @@ async fn main() -> Result<()> {
     // Ensure cache directory exists
     let cache = cache::Cache::new(cache::ensure_cache_dir()?, args.debug);
 
+    // Progress bar
+    let start = Instant::now();
+    let multi = MultiProgress::new();
+    let spinner_style = ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}")?
+        .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ");
+
     for to_fetch in urls.iter().flatten() {
+        let task_start = Instant::now();
+        let formatter = status::Status::new(&task_start, to_fetch);
+
+        // Add new bar
+        // 1 - Check cache
+        // 2 - Fetch
+        // 3 - parse html / writing to cache
+        // 4 - cleanup
+        // 5 - waiting
+        let prog_bar = multi.add(ProgressBar::new(*status::TERM_WIDTH as u64));
+        prog_bar.set_style(spinner_style.clone());
+        prog_bar.set_prefix("[1/?]");
+        prog_bar.set_message(formatter.format("Checking cache..."));
+
         if let Some(path) = cache.is_cached(to_fetch) {
             if args.debug {
                 println!(
@@ -67,13 +90,37 @@ async fn main() -> Result<()> {
                     path.display()
                 );
             }
+
+            prog_bar.set_prefix("[1/1]");
+            prog_bar.finish_with_message(formatter.format("cached, skipping..."));
             continue;
         }
 
-        // TODO: Http GET
+        // Http GET
+        prog_bar.set_prefix("[2/5]");
+        prog_bar.set_message(formatter.format("fetching..."));
+
+        let mut stream = reqwest::get(to_fetch.as_str()).await?;
+        while let Some(item) = stream.chunk().await? {
+            if args.debug {
+                println!("Chunk: {:?}", item);
+            }
+        }
+
+        // Done
+        prog_bar.set_prefix("[5/5]");
+        prog_bar.finish_with_message(formatter.format("done, waiting..."));
     }
 
-    println!("{:?}", urls);
+    if args.quiet {
+        multi.clear()?;
+    } else {
+        println!(
+            "{} urls done in {}",
+            urls.len(),
+            HumanDuration(start.elapsed())
+        );
+    }
 
     Ok(())
 }
