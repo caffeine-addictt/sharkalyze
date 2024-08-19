@@ -6,6 +6,7 @@ use std::fs::File;
 use std::io::{BufRead, BufReader};
 
 mod cache;
+mod status;
 mod weburl;
 
 fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
