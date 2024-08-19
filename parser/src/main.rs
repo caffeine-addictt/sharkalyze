@@ -26,6 +26,10 @@ struct Args {
     /// Whether to run it in debug mode
     #[arg(short, long, default_value_t = false)]
     debug: bool,
+
+    /// Whether to run it in quiet mode
+    #[arg(long, default_value_t = false)]
+    quiet: bool,
 }
 
 impl Args {
