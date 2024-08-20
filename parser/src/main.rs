@@ -3,6 +3,7 @@ use clap::Parser;
 // use futures_util::StreamExt;
 use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
 use url::Url;
+use lazy_static::lazy_static;
 
 use std::fs::File;
 use std::io::{BufRead, BufReader};
@@ -11,6 +12,14 @@ use std::time::Instant;
 mod cache;
 mod status;
 mod weburl;
+
+lazy_static! {
+    static ref SEPARATOR: HashSet<u8> = HashSet::from_iter("\n\t ".as_bytes().to_vec());
+    static ref HTML_TO_SKIP: Regex =
+        Regex::new(r#"^(class|id|style|data-\w+)\s*=\s*"[^"]*""#).unwrap();
+    static ref HTML_TO_SKIP_PRE: Regex =
+        Regex::new(r#"^(class|id|style|data-\w+)\s*=\s*".+"#).unwrap();
+}
 
 fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
     let file = File::open(path).with_context(|| format!("failed to open file: {path}"))?;
