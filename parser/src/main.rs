@@ -82,6 +82,8 @@ async fn main() -> Result<()> {
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg} {elapsed_precise}")?
             .tick_chars("-\\|/");
 
+    // Create client here to share connection pool
+    let client = reqwest::Client::new();
     let mut futures = vec![];
 
     for to_fetch in urls.iter().flatten() {
