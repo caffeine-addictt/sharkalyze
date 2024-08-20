@@ -121,8 +121,20 @@ async fn main() -> Result<()> {
         let future = async move {
             let formatter = status::Status::new(to_fetch);
 
+            // Http GET
+            prog_bar.set_prefix("[2/5]");
+            prog_bar.set_message(formatter.format("fetching..."));
+
+            let request = client.get(to_fetch.as_str()).send().await?;
+            if !request.status().is_success() {
+                return Err(anyhow::anyhow!("failed to fetch url"));
             }
 
+            // Open writer
+            let mut stream = request.bytes_stream();
+
+            // Write header
+            writer.write_all(b"HTML Content:\n").await?;
 
             Ok::<_, anyhow::Error>(())
         };
