@@ -26,10 +26,10 @@ const QrReader: PageComponent = () => {
     setScannedResult(result?.data);
     const sendURL = async () => {
       try {
-        const response = await fetch('http://localhost:3000/qrAnalyse', {
+        const response = await fetch('/qrAnalyse', {
           method: 'POST',
           headers: {
-            'Content Type': 'application/json',
+            'Content-Type': 'application/json',
           },
           body: JSON.stringify({ url: scannedResult }),
         });
@@ -114,7 +114,13 @@ const QrReader: PageComponent = () => {
             color: 'white',
           }}
         >
-          Scanned Result: {responseMessage}
+          Scanned Result: {scannedResult}
+          {responseMessage && (
+            <p style={{ marginTop: '10px', color: 'green' }}>
+              {' '}
+              server response: {responseMessage}
+            </p>
+          )}
         </p>
       )}
     </div>

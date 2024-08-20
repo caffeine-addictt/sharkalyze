@@ -14,4 +14,4 @@ def v1_healthcheck():
 def qrAnalyse():
     url = request.json()
     # process ai stuff here
-    return {"message": "Data received successfully", "received_data": url}
+    return url, 201
