@@ -93,7 +93,7 @@ async fn main() -> Result<()> {
         // 1 - Check cache
         // 2 - Fetch
         // 3 - parse html / writing to cache
-        // 4 - cleanup
+        // 4 - resolving urls of interest
         // 5 - waiting
         prog_bar.set_prefix("[1/?]");
         prog_bar.set_message(formatter.format("Checking cache..."));
