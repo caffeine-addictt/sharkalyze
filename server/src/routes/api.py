@@ -1,4 +1,4 @@
-from flask import current_app as app, request
+from flask import current_app as app, request, jsonify
 
 
 BASE_URL = "/api/v1"
@@ -10,8 +10,9 @@ def v1_healthcheck():
 
 
 # route for post to ai
-@app.route("/qrAnalyse", methods=["POST"])
+@app.route(f"{BASE_URL}/qr_analyse", methods=["POST"])
 def qrAnalyse():
-    url = request.json()
-    # process ai stuff here
-    return url, 201
+    if request.method == "POST":
+        request_data = request.get_json(force=True)
+        response_data = {"message": "Processing complete", "data": request_data}
+        return jsonify(response_data), 201

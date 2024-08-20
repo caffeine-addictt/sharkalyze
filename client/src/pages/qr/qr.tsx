@@ -21,15 +21,18 @@ const QrReader: PageComponent = () => {
 
   const sendURL = async () => {
     try {
-      const response = await fetch('/qrAnalyse', {
+      console.log('sending ...');
+      console.log(scannedResult);
+      const response = await fetch('http://localhost:3000/api/v1/qr_analyse', {
         method: 'POST',
+        body: JSON.stringify(scannedResult),
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url: scannedResult }),
       });
 
       const result = await response.json();
+      console.log(result);
       setResponseMessage(result.message);
     } catch (error) {
       console.error('Error:', error);
@@ -41,7 +44,14 @@ const QrReader: PageComponent = () => {
     // 🖨 Print the "result" to browser console.
     console.log(result);
     setScannedResult(result?.data);
+    // Effect to trigger sendURL when scannedResult changes
   };
+
+  useEffect(() => {
+    if (scannedResult) {
+      sendURL();
+    }
+  }, [scannedResult]);
 
   // Fail
   const onScanFail = (err: string | Error) => {
@@ -59,8 +69,6 @@ const QrReader: PageComponent = () => {
         highlightCodeOutline: true,
         overlay: qrBoxEl?.current || undefined,
       });
-      // send url
-      sendURL();
 
       // Start QR Scanner
       scanner?.current
