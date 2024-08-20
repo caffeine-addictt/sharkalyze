@@ -5,7 +5,9 @@ use regex::Regex;
 use url::Url;
 
 lazy_static! {
-    static ref URL_REGEXP: Regex = Regex::new(r"^https?://").unwrap();
+    pub static ref URL_REGEXP: Regex = Regex::new(r"^https?://").unwrap();
+    pub static ref SAMESITE_URL_REGEXP: Regex = Regex::new(r#"^/?[^:?#]+"#).unwrap();
+    pub static ref HTML_URL: Regex = Regex::new(r#"(?:href|src)\s*=\s*["']([^"']+)["']"#).unwrap();
 }
 
 pub fn parse_url(url: &str) -> Result<Url> {
