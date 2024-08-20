@@ -134,6 +134,8 @@ async fn main() -> Result<()> {
             let mut stream = request.bytes_stream();
             let mut buffer: Vec<u8> = Vec::new();
 
+            let mut urls_of_interest: Vec<String> = Vec::new();
+
             prog_bar.set_prefix("[3/5]");
             prog_bar.set_message(formatter.format("parsing content..."));
 
@@ -147,6 +149,85 @@ async fn main() -> Result<()> {
                     println!("{buffer:?}");
                 }
             }
+
+            // Handle urls of interest
+            prog_bar.set_prefix("[4/5]");
+            prog_bar.set_message(formatter.format("resolving urls..."));
+            let mut post_resolved_urls: Vec<String> = vec![];
+            let mut parsed_urls = 0;
+
+            for dirty_url in &urls_of_interest {
+                prog_bar.set_message(
+                    formatter.format(&format!("resolving urls found... [{dirty_url}]")),
+                );
+
+                if !dirty_url.ends_with(".js") {
+                    post_resolved_urls.push(format!("{dirty_url} - skipped, not a js file"));
+                    continue;
+                }
+
+                // Relative urls should be resolved to absolute
+                let url = if weburl::SAMESITE_URL_REGEXP.is_match(dirty_url) {
+                    // handle root level /
+                    let new_base: Result<_, ParseError> = if dirty_url.starts_with('/') {
+                        let mut new_to_fetch = to_fetch.clone();
+                        new_to_fetch.set_path(dirty_url);
+
+                        Ok(new_to_fetch)
+                    } else {
+                        to_fetch.join(dirty_url)
+                    };
+
+                    if new_base.is_err() {
+                        post_resolved_urls
+                            .push(format!("{dirty_url} - failed to resolve absolute url"));
+                        continue;
+                    }
+
+                    match Url::parse(new_base.unwrap().as_str()) {
+                        Ok(url) => url.to_string(),
+                        Err(err) => {
+                            post_resolved_urls.push(format!(
+                                "{dirty_url} - failed to resolve absolute url [{err}]"
+                            ));
+                            continue;
+                        }
+                    }
+                } else {
+                    dirty_url.to_string()
+                };
+
+                match client.get(&url).send().await {
+                    Ok(resp) => {
+                        if !resp.status().is_success() {
+                            post_resolved_urls.push(format!(
+                                "{url} - was NOT successful [Code: {}]",
+                                resp.status()
+                            ));
+                            continue;
+                        }
+
+                        let text = resp.text().await.unwrap_or(String::from(""));
+                        if !text.is_empty() {
+                            post_resolved_urls
+                                .push(format!("{url} - successfully fetched but returned nothing"));
+                            continue;
+                        }
+
+                        writer
+                            .write_all(format!("\n\n\n\n{url}:\n{text}").as_bytes())
+                            .await?;
+                        writer.write_all("\n\n\n\n".as_bytes()).await?;
+                        parsed_urls += 1;
+                    }
+                    Err(err) => post_resolved_urls
+                        .push(format!("{url} - errored while sending initial GET [{err}]")),
+                };
+            }
+
+            writer
+                .write_all(format!("\n\n\n\n{post_resolved_urls:?}").as_bytes())
+                .await?;
 
             Ok::<_, anyhow::Error>(())
         };
