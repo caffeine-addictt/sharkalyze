@@ -132,9 +132,21 @@ async fn main() -> Result<()> {
 
             // Open writer
             let mut stream = request.bytes_stream();
+            let mut buffer: Vec<u8> = Vec::new();
+
+            prog_bar.set_prefix("[3/5]");
+            prog_bar.set_message(formatter.format("parsing content..."));
 
             // Write header
             writer.write_all(b"HTML Content:\n").await?;
+
+            while let Some(Ok(chunk)) = stream.next().await {
+                // Append to buffer
+                buffer = [buffer, chunk.to_vec()].concat();
+                if args.debug {
+                    println!("{buffer:?}");
+                }
+            }
 
             Ok::<_, anyhow::Error>(())
         };
