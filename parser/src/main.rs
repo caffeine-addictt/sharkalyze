@@ -74,12 +74,16 @@ async fn main() -> Result<()> {
     // Progress bar
     let start = Instant::now();
     let multi = MultiProgress::new();
-    let spinner_style = ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg}")?
-        .tick_chars("⠁⠂⠄⡀⢀⠠⠐⠈ ");
+    let spinner_style =
+        ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg} {elapsed_precise}")?
+            .tick_chars("-\\|/");
 
     for to_fetch in urls.iter().flatten() {
-        let task_start = Instant::now();
-        let formatter = status::Status::new(&task_start, to_fetch);
+        let formatter = status::Status::new(to_fetch);
+
+        let prog_bar = multi.add(ProgressBar::new(*status::TERM_WIDTH as u64));
+        prog_bar.set_style(spinner_style.clone());
+        prog_bar.enable_steady_tick(Duration::from_millis(500));
 
         // Add new bar
         // 1 - Check cache
@@ -87,8 +91,6 @@ async fn main() -> Result<()> {
         // 3 - parse html / writing to cache
         // 4 - cleanup
         // 5 - waiting
-        let prog_bar = multi.add(ProgressBar::new(*status::TERM_WIDTH as u64));
-        prog_bar.set_style(spinner_style.clone());
         prog_bar.set_prefix("[1/?]");
         prog_bar.set_message(formatter.format("Checking cache..."));
 
