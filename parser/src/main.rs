@@ -149,6 +149,81 @@ async fn main() -> Result<()> {
                 if args.debug {
                     println!("{buffer:?}");
                 }
+
+                // Consume buffer (HTML as byte)
+                // We want to check if the current index is a seperator character,
+                // then check if the characters leading up to it match any regex to work on.
+                //
+                // If yes, we handle as such, less we write to disk
+                let mut i = 0;
+                while i < buffer.len() {
+                    if args.debug {
+                        println!("{}", i);
+                    }
+
+                    // Handle separators
+                    if SEPARATOR.contains(&buffer[i]) {
+                        // Only process up to the separator
+                        let consumed = String::from_utf8(buffer[0..i].to_vec())?;
+
+                        // Add to URLs
+                        if let Some(capture) = weburl::HTML_URL.captures(&consumed) {
+                            urls_of_interest.push(capture[1].to_string());
+                        }
+
+                        // Account for case where its not at the end of the element
+                        // class="a "
+                        //         ^
+                        if HTML_TO_SKIP_PRE.is_match(&consumed) {
+                            if HTML_TO_SKIP.is_match(&consumed) {
+                                // We ignore useless HTML stuff like class and style
+                                buffer.drain(0..=i);
+                                i = 0;
+                            }
+
+                            i += 1;
+                            continue;
+                        }
+
+                        // Write to disk
+                        prog_bar.set_message(formatter.format("writing to cache..."));
+                        writer.write_all(&buffer[0..=i]).await?;
+
+                        // Remove the processed part from the buffer
+                        buffer.drain(0..=i);
+                        i = 0;
+                        prog_bar.set_message(formatter.format("parsing content..."));
+                        continue;
+                    }
+
+                    // Handle incomplete line endings (LF/CRLF)
+                    if buffer[i] == b'\r' && (i + 1 == buffer.len() || buffer[i + 1] != b'\n') {
+                        if i + 1 < buffer.len() {
+                            buffer.remove(i);
+                        } else {
+                            break;
+                        }
+                    }
+
+                    // Remove repeated spaces
+                    if buffer[i] == b' ' && i > 0 && buffer[i - 1] == b' ' {
+                        buffer.remove(i - 1);
+                        i -= 1;
+                    }
+
+                    // Remove spaces around "="
+                    if buffer[i] == b'=' {
+                        if i + 1 < buffer.len() && buffer[i + 1] == b' ' {
+                            buffer.remove(i + 1);
+                        }
+                        if i > 0 && buffer[i - 1] == b' ' {
+                            buffer.remove(i - 1);
+                            i -= 1;
+                        }
+                    }
+
+                    i += 1;
+                }
             }
 
             // Handle urls of interest
