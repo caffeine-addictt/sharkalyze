@@ -15,6 +15,7 @@ use std::io::{BufRead, BufReader};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+mod asyncreq;
 mod cache;
 mod status;
 mod weburl;
@@ -132,7 +133,7 @@ async fn main() -> Result<()> {
             prog_bar.set_prefix("[2/5]");
             prog_bar.set_message(formatter.format("fetching..."));
 
-            let request = client.get(to_fetch.as_str()).send().await?;
+            let request = asyncreq::make_req(client.get(to_fetch.as_str())).await?;
             if !request.status().is_success() {
                 return Err(anyhow::anyhow!("failed to fetch url"));
             }
@@ -279,7 +280,7 @@ async fn main() -> Result<()> {
                     dirty_url.to_string()
                 };
 
-                match client.get(&url).send().await {
+                match asyncreq::make_req(client.get(&url)).await {
                     Ok(resp) => {
                         if !resp.status().is_success() {
                             post_resolved_urls.push(format!(
