@@ -7,12 +7,15 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::Semaphore;
 use url::{ParseError, Url};
 
 use std::collections::HashSet;
 use std::io::{BufRead, BufReader};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
+mod asyncreq;
 mod cache;
 mod status;
 mod weburl;
@@ -84,10 +87,12 @@ async fn main() -> Result<()> {
 
     // Create client here to share connection pool
     let client = reqwest::Client::new();
+    let semaphore = Arc::new(Semaphore::new(5));
     let mut futures = vec![];
 
     for to_fetch in urls.iter().flatten() {
         let formatter = status::Status::new(to_fetch);
+        let semaphore = semaphore.clone();
 
         let cache = cache.clone();
         let client = client.clone();
@@ -120,13 +125,15 @@ async fn main() -> Result<()> {
         }
 
         let future = async move {
+            // Wait and get lock
+            let task_permit = semaphore.acquire().await.unwrap();
             let formatter = status::Status::new(&to_fetch);
 
             // Http GET
             prog_bar.set_prefix("[2/5]");
             prog_bar.set_message(formatter.format("fetching..."));
 
-            let request = client.get(to_fetch.as_str()).send().await?;
+            let request = asyncreq::make_req(client.get(to_fetch.as_str())).await?;
             if !request.status().is_success() {
                 return Err(anyhow::anyhow!("failed to fetch url"));
             }
@@ -273,7 +280,7 @@ async fn main() -> Result<()> {
                     dirty_url.to_string()
                 };
 
-                match client.get(&url).send().await {
+                match asyncreq::make_req(client.get(&url)).await {
                     Ok(resp) => {
                         if !resp.status().is_success() {
                             post_resolved_urls.push(format!(
@@ -311,6 +318,9 @@ async fn main() -> Result<()> {
                 "done after parsing {} urls.",
                 post_resolved_urls.len(),
             )));
+
+            // Release lock
+            drop(task_permit);
 
             Ok::<_, anyhow::Error>(())
         };
