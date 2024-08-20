@@ -305,6 +305,15 @@ async fn main() -> Result<()> {
                 .write_all(format!("\n\n\n\n{post_resolved_urls:?}").as_bytes())
                 .await?;
 
+            // Done
+            writer.flush().await?;
+            prog_bar.set_prefix("\x1b[32m[5/5]\x1b[0m");
+            prog_bar.finish_with_message(formatter.format(&format!(
+                "done after parsing and resolving {}/{} urls.",
+                parsed_urls,
+                post_resolved_urls.len(),
+            )));
+
             Ok::<_, anyhow::Error>(())
         };
         // Push the future onto our list of futures.
