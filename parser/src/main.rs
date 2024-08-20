@@ -82,8 +82,13 @@ async fn main() -> Result<()> {
         ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg} {elapsed_precise}")?
             .tick_chars("-\\|/");
 
+    let mut futures = vec![];
+
     for to_fetch in urls.iter().flatten() {
         let formatter = status::Status::new(to_fetch);
+
+        let cache = cache.clone();
+        let client = client.clone();
 
         let prog_bar = multi.add(ProgressBar::new(*status::TERM_WIDTH as u64));
         prog_bar.set_style(spinner_style.clone());
@@ -111,9 +116,25 @@ async fn main() -> Result<()> {
             continue;
         }
 
+        let future = async move {
+            let formatter = status::Status::new(to_fetch);
 
             }
 
+
+            Ok::<_, anyhow::Error>(())
+        };
+        // Push the future onto our list of futures.
+        futures.push(future);
+    }
+
+    // Wait for all to complete
+    let processes = join_all(futures).await;
+    for response in processes {
+        match response {
+            Ok(_) => {}
+            Err(e) => eprintln!("Error: {}", e),
+        }
     }
 
     if args.quiet {
