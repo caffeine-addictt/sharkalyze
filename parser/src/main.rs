@@ -91,6 +91,7 @@ async fn main() -> Result<()> {
 
         let cache = cache.clone();
         let client = client.clone();
+        let to_fetch = to_fetch.clone();
 
         let prog_bar = multi.add(ProgressBar::new(*status::TERM_WIDTH as u64));
         prog_bar.set_style(spinner_style.clone());
@@ -105,7 +106,7 @@ async fn main() -> Result<()> {
         prog_bar.set_prefix("[1/?]");
         prog_bar.set_message(formatter.format("Checking cache..."));
 
-        if let Some(path) = cache.is_cached(to_fetch) {
+        if let Some(path) = cache.is_cached(&to_fetch) {
             if args.debug {
                 println!(
                     "Found in cache for {to_fetch} at {}, skipping...",
@@ -119,7 +120,7 @@ async fn main() -> Result<()> {
         }
 
         let future = async move {
-            let formatter = status::Status::new(to_fetch);
+            let formatter = status::Status::new(&to_fetch);
 
             // Http GET
             prog_bar.set_prefix("[2/5]");
@@ -132,7 +133,7 @@ async fn main() -> Result<()> {
 
             // Open writer
             let mut stream = request.bytes_stream();
-            let mut writer = File::create(cache.get_filename(to_fetch)?).await?;
+            let mut writer = File::create(cache.get_filename(&to_fetch)?).await?;
             let mut buffer: Vec<u8> = Vec::new();
 
             let mut urls_of_interest: Vec<String> = Vec::new();
@@ -230,7 +231,6 @@ async fn main() -> Result<()> {
             prog_bar.set_prefix("[4/5]");
             prog_bar.set_message(formatter.format("resolving urls..."));
             let mut post_resolved_urls: Vec<String> = vec![];
-            let mut parsed_urls = 0;
 
             for dirty_url in &urls_of_interest {
                 prog_bar.set_message(
@@ -294,7 +294,6 @@ async fn main() -> Result<()> {
                             .write_all(format!("\n\n\n\n{url}:\n{text}").as_bytes())
                             .await?;
                         writer.write_all("\n\n\n\n".as_bytes()).await?;
-                        parsed_urls += 1;
                     }
                     Err(err) => post_resolved_urls
                         .push(format!("{url} - errored while sending initial GET [{err}]")),
@@ -309,15 +308,14 @@ async fn main() -> Result<()> {
             writer.flush().await?;
             prog_bar.set_prefix("\x1b[32m[5/5]\x1b[0m");
             prog_bar.finish_with_message(formatter.format(&format!(
-                "done after parsing and resolving {}/{} urls.",
-                parsed_urls,
+                "done after parsing {} urls.",
                 post_resolved_urls.len(),
             )));
 
             Ok::<_, anyhow::Error>(())
         };
         // Push the future onto our list of futures.
-        futures.push(future);
+        futures.push(tokio::spawn(future));
     }
 
     // Wait for all to complete
