@@ -9,6 +9,7 @@ use filenamify::filenamify;
 
 const CACHE_DIR: &str = ".sharkalyze_cache";
 
+#[derive(Clone, Debug)]
 pub struct Cache {
     pub pathbuf: PathBuf,
     debug: bool,
