@@ -7,10 +7,12 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use tokio::fs::File;
 use tokio::io::AsyncWriteExt;
+use tokio::sync::Semaphore;
 use url::{ParseError, Url};
 
 use std::collections::HashSet;
 use std::io::{BufRead, BufReader};
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 mod cache;
@@ -84,10 +86,12 @@ async fn main() -> Result<()> {
 
     // Create client here to share connection pool
     let client = reqwest::Client::new();
+    let semaphore = Arc::new(Semaphore::new(5));
     let mut futures = vec![];
 
     for to_fetch in urls.iter().flatten() {
         let formatter = status::Status::new(to_fetch);
+        let semaphore = semaphore.clone();
 
         let cache = cache.clone();
         let client = client.clone();
@@ -120,6 +124,8 @@ async fn main() -> Result<()> {
         }
 
         let future = async move {
+            // Wait and get lock
+            let task_permit = semaphore.acquire().await.unwrap();
             let formatter = status::Status::new(&to_fetch);
 
             // Http GET
@@ -311,6 +317,9 @@ async fn main() -> Result<()> {
                 "done after parsing {} urls.",
                 post_resolved_urls.len(),
             )));
+
+            // Release lock
+            drop(task_permit);
 
             Ok::<_, anyhow::Error>(())
         };
