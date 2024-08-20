@@ -1,13 +1,17 @@
 use anyhow::{Context, Result};
 use clap::Parser;
-// use futures_util::StreamExt;
+use futures_util::future::join_all;
+use futures_util::StreamExt;
 use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
-use url::Url;
 use lazy_static::lazy_static;
+use regex::Regex;
+use tokio::fs::File;
+use tokio::io::AsyncWriteExt;
+use url::{ParseError, Url};
 
-use std::fs::File;
+use std::collections::HashSet;
 use std::io::{BufRead, BufReader};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 mod cache;
 mod status;
@@ -22,7 +26,7 @@ lazy_static! {
 }
 
 fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
-    let file = File::open(path).with_context(|| format!("failed to open file: {path}"))?;
+    let file = std::fs::File::open(path).with_context(|| format!("failed to open file: {path}"))?;
     Ok(BufReader::new(file)
         .lines()
         .map(|ln| weburl::parse_url(&ln?))
