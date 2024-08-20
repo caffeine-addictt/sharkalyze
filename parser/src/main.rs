@@ -111,20 +111,9 @@ async fn main() -> Result<()> {
             continue;
         }
 
-        // Http GET
-        prog_bar.set_prefix("[2/5]");
-        prog_bar.set_message(formatter.format("fetching..."));
 
-        let mut stream = reqwest::get(to_fetch.as_str()).await?;
-        while let Some(item) = stream.chunk().await? {
-            if args.debug {
-                println!("Chunk: {:?}", item);
             }
-        }
 
-        // Done
-        prog_bar.set_prefix("[5/5]");
-        prog_bar.finish_with_message(formatter.format("done, waiting..."));
     }
 
     if args.quiet {
