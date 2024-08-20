@@ -132,6 +132,7 @@ async fn main() -> Result<()> {
 
             // Open writer
             let mut stream = request.bytes_stream();
+            let mut writer = File::create(cache.get_filename(to_fetch)?).await?;
             let mut buffer: Vec<u8> = Vec::new();
 
             let mut urls_of_interest: Vec<String> = Vec::new();
