@@ -15,7 +15,6 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 mod asyncreq;
-mod cache;
 mod status;
 mod weburl;
 
@@ -72,8 +71,6 @@ async fn main() -> Result<()> {
         anyhow::bail!("no valid urls found");
     }
 
-    // Ensure cache directory exists
-    let cache = cache::Cache::new(cache::ensure_cache_dir()?, args.debug);
 
     // Progress bar
     let start = Instant::now();
@@ -91,7 +88,6 @@ async fn main() -> Result<()> {
         let formatter = status::Status::new(to_fetch);
         let semaphore = semaphore.clone();
 
-        let cache = cache.clone();
         let client = client.clone();
         let to_fetch = to_fetch.clone();
 
@@ -100,26 +96,12 @@ async fn main() -> Result<()> {
         prog_bar.enable_steady_tick(Duration::from_millis(500));
 
         // Add new bar
-        // 1 - Check cache
         // 2 - Fetch
         // 3 - parse html / writing to cache
         // 4 - resolving urls of interest
         // 5 - waiting
-        prog_bar.set_prefix("[1/?]");
+        prog_bar.set_prefix("[1/4]");
         prog_bar.set_message(formatter.format("Checking cache..."));
-
-        if let Some(path) = cache.is_cached(&to_fetch) {
-            if args.debug {
-                println!(
-                    "Found in cache for {to_fetch} at {}, skipping...",
-                    path.display()
-                );
-            }
-
-            prog_bar.set_prefix("[1/1]");
-            prog_bar.finish_with_message(formatter.format("cached, skipping..."));
-            continue;
-        }
 
         let future = async move {
             // Wait and get lock
@@ -127,7 +109,7 @@ async fn main() -> Result<()> {
             let formatter = status::Status::new(&to_fetch);
 
             // Http GET
-            prog_bar.set_prefix("[2/5]");
+            prog_bar.set_prefix("[2/4]");
             prog_bar.set_message(formatter.format("fetching..."));
 
             let request = asyncreq::make_req(client.get(to_fetch.as_str())).await?;
@@ -137,16 +119,16 @@ async fn main() -> Result<()> {
 
             // Open writer
             let mut stream = request.bytes_stream();
-            let mut writer = File::create(cache.get_filename(&to_fetch)?).await?;
+            // let mut writer = File::create(cache.get_filename(&to_fetch)?).await?;
             let mut buffer: Vec<u8> = Vec::new();
 
             let mut urls_of_interest: Vec<String> = Vec::new();
 
-            prog_bar.set_prefix("[3/5]");
+            prog_bar.set_prefix("[3/4]");
             prog_bar.set_message(formatter.format("parsing content..."));
 
             // Write header
-            writer.write_all(b"HTML Content:\n").await?;
+            // writer.write_all(b"HTML Content:\n").await?;
 
             while let Some(Ok(chunk)) = stream.next().await {
                 // Append to buffer
@@ -192,7 +174,7 @@ async fn main() -> Result<()> {
 
                         // Write to disk
                         prog_bar.set_message(formatter.format("writing to cache..."));
-                        writer.write_all(&buffer[0..=i]).await?;
+                        // writer.write_all(&buffer[0..=i]).await?;
 
                         // Remove the processed part from the buffer
                         buffer.drain(0..=i);
@@ -232,7 +214,7 @@ async fn main() -> Result<()> {
             }
 
             // Handle urls of interest
-            prog_bar.set_prefix("[4/5]");
+            prog_bar.set_prefix("[4/4]");
             prog_bar.set_message(formatter.format("resolving urls..."));
             let mut post_resolved_urls: Vec<String> = vec![];
 
@@ -294,23 +276,23 @@ async fn main() -> Result<()> {
                             continue;
                         }
 
-                        writer
-                            .write_all(format!("\n\n\n\n{url}:\n{text}").as_bytes())
-                            .await?;
-                        writer.write_all("\n\n\n\n".as_bytes()).await?;
+                        // writer
+                        //     .write_all(format!("\n\n\n\n{url}:\n{text}").as_bytes())
+                        //     .await?;
+                        // writer.write_all("\n\n\n\n".as_bytes()).await?;
                     }
                     Err(err) => post_resolved_urls
                         .push(format!("{url} - errored while sending initial GET [{err}]")),
                 };
             }
 
-            writer
-                .write_all(format!("\n\n\n\n{post_resolved_urls:?}").as_bytes())
-                .await?;
+            // writer
+            //     .write_all(format!("\n\n\n\n{post_resolved_urls:?}").as_bytes())
+            //     .await?;
 
             // Done
-            writer.flush().await?;
-            prog_bar.set_prefix("\x1b[32m[5/5]\x1b[0m");
+            // writer.flush().await?;
+            prog_bar.set_prefix("\x1b[32m[OK]\x1b[0m");
             prog_bar.finish_with_message(formatter.format(&format!(
                 "done after parsing {} urls.",
                 post_resolved_urls.len(),
