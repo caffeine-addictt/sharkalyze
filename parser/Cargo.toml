@@ -15,3 +15,4 @@ reqwest = { version = "0.12.5", features = ["stream"] }
 futures-util = "0.3.30"
 indicatif = "0.17.8"
 term_size = "0.3.2"
+chrono = "0.4.38"
