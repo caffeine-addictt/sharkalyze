@@ -1,3 +1,5 @@
+use std::io::{BufRead, BufReader};
+
 use anyhow::{Context, Result};
 
 use lazy_static::lazy_static;
@@ -17,4 +19,12 @@ pub fn parse_url(url: &str) -> Result<Url> {
     }
 
     Url::parse(url).with_context(|| format!("failed to parse URL: {url}"))
+}
+
+pub fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
+    let file = std::fs::File::open(path).with_context(|| format!("failed to open file: {path}"))?;
+    Ok(BufReader::new(file)
+        .lines()
+        .map(|ln| parse_url(&ln?))
+        .collect())
 }
