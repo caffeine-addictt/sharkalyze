@@ -1,4 +1,4 @@
-use anyhow::{Context, Result};
+use anyhow::Result;
 use clap::Parser;
 use futures_util::future::join_all;
 use futures_util::StreamExt;
@@ -11,7 +11,6 @@ use tokio::sync::Semaphore;
 use url::{ParseError, Url};
 
 use std::collections::HashSet;
-use std::io::{BufRead, BufReader};
 use std::sync::Arc;
 use std::time::{Duration, Instant};
 
@@ -26,14 +25,6 @@ lazy_static! {
         Regex::new(r#"^(class|id|style|data-\w+)\s*=\s*"[^"]*""#).unwrap();
     static ref HTML_TO_SKIP_PRE: Regex =
         Regex::new(r#"^(class|id|style|data-\w+)\s*=\s*".+"#).unwrap();
-}
-
-fn parse_from_file(path: &str) -> Result<Vec<Result<Url>>> {
-    let file = std::fs::File::open(path).with_context(|| format!("failed to open file: {path}"))?;
-    Ok(BufReader::new(file)
-        .lines()
-        .map(|ln| weburl::parse_url(&ln?))
-        .collect())
 }
 
 /// HTML scrapper and parser
@@ -53,10 +44,10 @@ struct Args {
 }
 
 impl Args {
-    /// Parse url or file and return list of urls
-    fn get_urls(&self) -> Result<Vec<Result<Url>>> {
+    /// Parse url or file and return list of valid urls
+    fn get_urls(&self) -> Result<HashSet<Url>> {
         match weburl::parse_url(&self.url_or_path) {
-            Ok(url) => Ok(vec![Ok(url)]),
+            Ok(url) => Ok(HashSet::from([url])),
             Err(e) => {
                 if self.debug {
                     eprintln!(
@@ -64,7 +55,12 @@ impl Args {
                         falling back to reading as file"
                     );
                 }
-                Ok(parse_from_file(&self.url_or_path)?)
+                Ok(HashSet::from_iter(
+                    weburl::parse_from_file(&self.url_or_path)?
+                        .iter()
+                        .flatten()
+                        .cloned(),
+                ))
             }
         }
     }
@@ -74,6 +70,9 @@ impl Args {
 async fn main() -> Result<()> {
     let args = Args::parse();
     let urls = args.get_urls()?;
+    if urls.is_empty() {
+        anyhow::bail!("no valid urls found");
+    }
 
     // Ensure cache directory exists
     let cache = cache::Cache::new(cache::ensure_cache_dir()?, args.debug);
@@ -90,7 +89,7 @@ async fn main() -> Result<()> {
     let semaphore = Arc::new(Semaphore::new(5));
     let mut futures = vec![];
 
-    for to_fetch in urls.iter().flatten() {
+    for to_fetch in &urls {
         let formatter = status::Status::new(to_fetch);
         let semaphore = semaphore.clone();
 
