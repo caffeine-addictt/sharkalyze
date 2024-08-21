@@ -55,12 +55,10 @@ impl Args {
                         falling back to reading as file"
                     );
                 }
-                Ok(HashSet::from_iter(
-                    weburl::parse_from_file(&self.url_or_path)?
-                        .iter()
-                        .flatten()
-                        .cloned(),
-                ))
+                Ok(weburl::parse_from_file(&self.url_or_path)?
+                    .into_iter()
+                    .flatten()
+                    .collect())
             }
         }
     }
