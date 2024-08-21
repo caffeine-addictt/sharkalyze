@@ -44,10 +44,10 @@ struct Args {
 }
 
 impl Args {
-    /// Parse url or file and return list of urls
-    fn get_urls(&self) -> Result<Vec<Result<Url>>> {
+    /// Parse url or file and return list of valid urls
+    fn get_urls(&self) -> Result<HashSet<Url>> {
         match weburl::parse_url(&self.url_or_path) {
-            Ok(url) => Ok(vec![Ok(url)]),
+            Ok(url) => Ok(HashSet::from([url])),
             Err(e) => {
                 if self.debug {
                     eprintln!(
@@ -55,7 +55,12 @@ impl Args {
                         falling back to reading as file"
                     );
                 }
-                Ok(weburl::parse_from_file(&self.url_or_path)?)
+                Ok(HashSet::from_iter(
+                    weburl::parse_from_file(&self.url_or_path)?
+                        .iter()
+                        .flatten()
+                        .cloned(),
+                ))
             }
         }
     }
@@ -65,6 +70,9 @@ impl Args {
 async fn main() -> Result<()> {
     let args = Args::parse();
     let urls = args.get_urls()?;
+    if urls.is_empty() {
+        anyhow::bail!("no valid urls found");
+    }
 
     // Ensure cache directory exists
     let cache = cache::Cache::new(cache::ensure_cache_dir()?, args.debug);
@@ -81,7 +89,7 @@ async fn main() -> Result<()> {
     let semaphore = Arc::new(Semaphore::new(5));
     let mut futures = vec![];
 
-    for to_fetch in urls.iter().flatten() {
+    for to_fetch in &urls {
         let formatter = status::Status::new(to_fetch);
         let semaphore = semaphore.clone();
 
