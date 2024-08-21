@@ -15,6 +15,7 @@ use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 mod asyncreq;
+mod parser;
 mod status;
 mod weburl;
 
