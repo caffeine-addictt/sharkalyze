@@ -79,8 +79,8 @@ pub async fn generate_vector(
         vector.external_link_count as f32 / vector.samesite_link_count as f32;
     vector.javascript_reachable_ratio =
         vector.javascript_reachable_count as f32 / vector.javascript_unreachable_count as f32;
-    vector.external_samesite_link_ratio =
-        vector.external_link_count as f32 / vector.samesite_link_count as f32;
+    vector.external_samesite_javascript_ratio =
+        vector.external_javascript_count as f32 / vector.samesite_javascript_count as f32;
 
     Ok(vector)
 }
