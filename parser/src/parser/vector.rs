@@ -1,11 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::sync::atomic::{AtomicUsize, Ordering};
 
 /// Vector structure that is generated
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Vector {
-    id: usize,
-
     // Url
     url: String,
     is_ssl_https: bool,
@@ -50,10 +47,8 @@ static CURRENT_ID: AtomicUsize = AtomicUsize::new(0);
 impl Vector {
     /// Initializes a new Vector with default values
     pub fn new() -> Self {
-        let curr_id = CURRENT_ID.fetch_add(1, Ordering::SeqCst);
 
         Vector {
-            id: curr_id,
             url: String::new(),
             is_ssl_https: false,
             url_entropy: 0,
