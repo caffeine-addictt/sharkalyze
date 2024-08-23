@@ -2,7 +2,12 @@ use anyhow::Result;
 use indicatif::ProgressBar;
 use url::Url;
 
-use crate::{asyncreq, status::Status, weburl};
+use crate::{
+    asyncreq,
+    parser::vector::{format_bool, format_u8},
+    status::Status,
+    weburl,
+};
 
 pub mod crawl;
 pub mod overlap;
@@ -19,7 +24,7 @@ pub async fn generate_vector(
 
     // SSL
     if vector.url.starts_with("https://") {
-        vector.is_ssl_https = true;
+        vector.is_ssl_https = 1;
     }
 
     // Calculating entropy
@@ -44,25 +49,25 @@ pub async fn generate_vector(
             })
             .await
         {
-            if hyprlink_vector.is_external {
+            if format_u8(hyprlink_vector.is_external) {
                 vector.external_link_count += 1;
             }
-            if hyprlink_vector.is_samesite {
+            if format_u8(hyprlink_vector.is_samesite) {
                 vector.samesite_link_count += 1;
             }
 
             // js
-            if hyprlink_vector.is_javascript {
+            if format_u8(hyprlink_vector.is_javascript) {
                 vector.javascript_count += 1;
 
-                if hyprlink_vector.is_external {
+                if format_u8(hyprlink_vector.is_external) {
                     vector.external_javascript_count += 1;
                 }
-                if hyprlink_vector.is_samesite {
+                if format_u8(hyprlink_vector.is_samesite) {
                     vector.samesite_javascript_count += 1;
                 }
 
-                if hyprlink_vector.is_successful_response {
+                if format_u8(hyprlink_vector.is_successful_response) {
                     vector.javascript_reachable_count += 1;
                 } else {
                     vector.javascript_unreachable_count += 1;
@@ -99,7 +104,7 @@ where
 
     // Account for when url is relative
     let url = if weburl::SAMESITE_URL_REGEXP.is_match(url_str) {
-        hyprlink.is_samesite = true;
+        hyprlink.is_samesite = 1;
 
         // handle root level /
         let new_base = if url_str.starts_with('/') {
@@ -116,10 +121,10 @@ where
         url_str.to_string()
     };
 
-    hyprlink.is_external = url == root_url.to_string();
+    hyprlink.is_external = format_bool(url == root_url.to_string());
 
     if url.starts_with("https://") {
-        hyprlink.is_ssl_https = true;
+        hyprlink.is_ssl_https = 1;
     }
 
     set_progress("Calculating entropy...");
@@ -128,39 +133,41 @@ where
     set_progress("Resolving url...");
     let req = asyncreq::make_req(client.get(&url)).await?;
     if !req.status().is_success() {
-        hyprlink.is_successful_response = false;
+        hyprlink.is_successful_response = 0;
         return Ok(hyprlink);
     }
-    hyprlink.is_successful_response = true;
+    hyprlink.is_successful_response = 1;
 
     set_progress("Checking headers...");
     if let Some(val) = req.headers().get("content-type") {
         if let Ok(header) = val.to_str() {
             // Explicit headers
-            hyprlink.is_utf8_from_header = header.contains("utf-8");
-            hyprlink.is_html_from_content_header = header.contains("text/html");
-            hyprlink.is_javascript_from_content_header = header.contains("text/javascript");
-            hyprlink.is_json_from_content_header = header.contains("application/json");
-            hyprlink.is_css_from_content_header = header.contains("text/css");
-            hyprlink.is_xml_from_content_header = header.contains("text/xml");
-            hyprlink.is_csv_from_content_header = header.contains("text/csv");
-            hyprlink.is_plain_from_content_header = header.contains("text/plain");
+            hyprlink.is_utf8_from_header = format_bool(header.contains("utf-8"));
+            hyprlink.is_html_from_content_header = format_bool(header.contains("text/html"));
+            hyprlink.is_javascript_from_content_header =
+                format_bool(header.contains("text/javascript"));
+            hyprlink.is_json_from_content_header = format_bool(header.contains("application/json"));
+            hyprlink.is_css_from_content_header = format_bool(header.contains("text/css"));
+            hyprlink.is_xml_from_content_header = format_bool(header.contains("text/xml"));
+            hyprlink.is_csv_from_content_header = format_bool(header.contains("text/csv"));
+            hyprlink.is_plain_from_content_header = format_bool(header.contains("text/plain"));
 
             // General headers
-            hyprlink.is_image_from_content_header = header.contains("image/");
-            hyprlink.is_video_from_content_header = header.contains("video/");
-            hyprlink.is_audio_from_content_header = header.contains("audio/");
-            hyprlink.is_xtoken_from_content_header = header.contains("x-token/");
-            hyprlink.is_message_from_content_header = header.contains("message/");
-            hyprlink.is_multipart_from_content_header = header.contains("multipart/");
-            hyprlink.is_not_usual_format_from_content_header =
-                (hyprlink.is_image_from_content_header as usize
-                    + hyprlink.is_video_from_content_header as usize
-                    + hyprlink.is_audio_from_content_header as usize
-                    + hyprlink.is_xtoken_from_content_header as usize
-                    + hyprlink.is_message_from_content_header as usize
-                    + hyprlink.is_multipart_from_content_header as usize)
-                    == 0;
+            hyprlink.is_image_from_content_header = format_bool(header.contains("image/"));
+            hyprlink.is_video_from_content_header = format_bool(header.contains("video/"));
+            hyprlink.is_audio_from_content_header = format_bool(header.contains("audio/"));
+            hyprlink.is_xtoken_from_content_header = format_bool(header.contains("x-token/"));
+            hyprlink.is_message_from_content_header = format_bool(header.contains("message/"));
+            hyprlink.is_multipart_from_content_header = format_bool(header.contains("multipart/"));
+            hyprlink.is_not_usual_format_from_content_header = format_bool(
+                hyprlink.is_image_from_content_header
+                    + hyprlink.is_video_from_content_header
+                    + hyprlink.is_audio_from_content_header
+                    + hyprlink.is_xtoken_from_content_header
+                    + hyprlink.is_message_from_content_header
+                    + hyprlink.is_multipart_from_content_header
+                    == 0,
+            );
 
             hyprlink.resolve_generics();
         }

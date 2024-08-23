@@ -16,54 +16,54 @@ lazy_static! {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Hyprlink {
     // Url
-    pub url: String,                  // ok
-    pub is_ssl_https: bool,           // ok
-    pub url_entropy: f32,             // ok
-    pub is_samesite: bool,            // ok
-    pub is_external: bool,            // ok
-    pub is_successful_response: bool, // ok
+    pub url: String,                // ok
+    pub is_ssl_https: u8,           // ok
+    pub url_entropy: f32,           // ok
+    pub is_samesite: u8,            // ok
+    pub is_external: u8,            // ok
+    pub is_successful_response: u8, // ok
 
     // Generic
-    pub is_html: bool,           // ok
-    pub is_javascript: bool,     // ok
-    pub is_json: bool,           // ok
-    pub is_css: bool,            // ok
-    pub is_image: bool,          // ok
-    pub is_video: bool,          // ok
-    pub is_audio: bool,          // ok
-    pub url_type_is_known: bool, // ok
+    pub is_html: u8,           // ok
+    pub is_javascript: u8,     // ok
+    pub is_json: u8,           // ok
+    pub is_css: u8,            // ok
+    pub is_image: u8,          // ok
+    pub is_video: u8,          // ok
+    pub is_audio: u8,          // ok
+    pub url_type_is_known: u8, // ok
 
     // Explicit url
-    pub is_html_from_url: bool,       // ok
-    pub is_javascript_from_url: bool, // ok
-    pub is_json_from_url: bool,       // ok
-    pub is_css_from_url: bool,        // ok
+    pub is_html_from_url: u8,       // ok
+    pub is_javascript_from_url: u8, // ok
+    pub is_json_from_url: u8,       // ok
+    pub is_css_from_url: u8,        // ok
 
     // General url
-    pub is_image_from_url: bool,        // ok
-    pub is_video_from_url: bool,        // ok
-    pub is_audio_from_url: bool,        // ok
-    pub is_document_from_url: bool,     // ok
-    pub cannot_identify_from_url: bool, // ok
+    pub is_image_from_url: u8,        // ok
+    pub is_video_from_url: u8,        // ok
+    pub is_audio_from_url: u8,        // ok
+    pub is_document_from_url: u8,     // ok
+    pub cannot_identify_from_url: u8, // ok
 
     // Explict header
-    pub is_utf8_from_header: bool,               // ok
-    pub is_html_from_content_header: bool,       // ok
-    pub is_javascript_from_content_header: bool, // ok
-    pub is_json_from_content_header: bool,       // ok
-    pub is_css_from_content_header: bool,        // ok
-    pub is_xml_from_content_header: bool,        // ok
-    pub is_csv_from_content_header: bool,        // ok
-    pub is_plain_from_content_header: bool,      // ok
+    pub is_utf8_from_header: u8,               // ok
+    pub is_html_from_content_header: u8,       // ok
+    pub is_javascript_from_content_header: u8, // ok
+    pub is_json_from_content_header: u8,       // ok
+    pub is_css_from_content_header: u8,        // ok
+    pub is_xml_from_content_header: u8,        // ok
+    pub is_csv_from_content_header: u8,        // ok
+    pub is_plain_from_content_header: u8,      // ok
 
     // General header
-    pub is_image_from_content_header: bool,            // ok
-    pub is_video_from_content_header: bool,            // ok
-    pub is_audio_from_content_header: bool,            // ok
-    pub is_xtoken_from_content_header: bool,           // ok
-    pub is_message_from_content_header: bool,          // ok
-    pub is_multipart_from_content_header: bool,        // ok
-    pub is_not_usual_format_from_content_header: bool, // ok
+    pub is_image_from_content_header: u8,            // ok
+    pub is_video_from_content_header: u8,            // ok
+    pub is_audio_from_content_header: u8,            // ok
+    pub is_xtoken_from_content_header: u8,           // ok
+    pub is_message_from_content_header: u8,          // ok
+    pub is_multipart_from_content_header: u8,        // ok
+    pub is_not_usual_format_from_content_header: u8, // ok
 
     // Content length
     pub content_length: usize, // ok
@@ -71,30 +71,30 @@ pub struct Hyprlink {
 
 impl Hyprlink {
     pub fn new(url: String) -> Self {
-        let is_html_from_url = url.ends_with(".htm") || url.ends_with(".html");
-        let is_javascript_from_url = url.ends_with(".js");
-        let is_json_from_url = url.ends_with(".json");
-        let is_css_from_url = url.ends_with(".css");
-        let is_image_from_url = IMAGE_EXTENSION.is_match(url.as_bytes());
-        let is_video_from_url = VIDEO_EXTENSION.is_match(url.as_bytes());
-        let is_audio_from_url = AUDIO_EXTENSION.is_match(url.as_bytes());
-        let is_document_from_url = DOCUMENT_EXTENSION.is_match(url.as_bytes());
+        let is_html_from_url = format_bool(url.ends_with(".htm") || url.ends_with(".html"));
+        let is_javascript_from_url = format_bool(url.ends_with(".js"));
+        let is_json_from_url = format_bool(url.ends_with(".json"));
+        let is_css_from_url = format_bool(url.ends_with(".css"));
+        let is_image_from_url = format_bool(IMAGE_EXTENSION.is_match(url.as_bytes()));
+        let is_video_from_url = format_bool(VIDEO_EXTENSION.is_match(url.as_bytes()));
+        let is_audio_from_url = format_bool(AUDIO_EXTENSION.is_match(url.as_bytes()));
+        let is_document_from_url = format_bool(DOCUMENT_EXTENSION.is_match(url.as_bytes()));
 
         Hyprlink {
             url,
-            is_ssl_https: false,
+            is_ssl_https: 0,
             url_entropy: 0f32,
-            is_samesite: false,
-            is_external: false,
-            is_successful_response: false,
-            is_html: false,
-            is_javascript: false,
-            is_json: false,
-            is_css: false,
-            is_image: false,
-            is_video: false,
-            is_audio: false,
-            url_type_is_known: false,
+            is_samesite: 0,
+            is_external: 0,
+            is_successful_response: 0,
+            is_html: 0,
+            is_javascript: 0,
+            is_json: 0,
+            is_css: 0,
+            is_image: 0,
+            is_video: 0,
+            is_audio: 0,
+            url_type_is_known: 0,
             is_html_from_url,
             is_javascript_from_url,
             is_json_from_url,
@@ -103,29 +103,32 @@ impl Hyprlink {
             is_video_from_url,
             is_audio_from_url,
             is_document_from_url,
-            cannot_identify_from_url: !(is_html_from_url
-                || is_javascript_from_url
-                || is_json_from_url
-                || is_css_from_url
-                || is_image_from_url
-                || is_video_from_url
-                || is_audio_from_url
-                || is_document_from_url),
-            is_utf8_from_header: false,
-            is_html_from_content_header: false,
-            is_javascript_from_content_header: false,
-            is_json_from_content_header: false,
-            is_css_from_content_header: false,
-            is_xml_from_content_header: false,
-            is_csv_from_content_header: false,
-            is_plain_from_content_header: false,
-            is_image_from_content_header: false,
-            is_video_from_content_header: false,
-            is_audio_from_content_header: false,
-            is_xtoken_from_content_header: false,
-            is_message_from_content_header: false,
-            is_multipart_from_content_header: false,
-            is_not_usual_format_from_content_header: false,
+            cannot_identify_from_url: format_bool(
+                is_html_from_url
+                    + is_javascript_from_url
+                    + is_json_from_url
+                    + is_css_from_url
+                    + is_image_from_url
+                    + is_video_from_url
+                    + is_audio_from_url
+                    + is_document_from_url
+                    == 0,
+            ),
+            is_utf8_from_header: 0,
+            is_html_from_content_header: 0,
+            is_javascript_from_content_header: 0,
+            is_json_from_content_header: 0,
+            is_css_from_content_header: 0,
+            is_xml_from_content_header: 0,
+            is_csv_from_content_header: 0,
+            is_plain_from_content_header: 0,
+            is_image_from_content_header: 0,
+            is_video_from_content_header: 0,
+            is_audio_from_content_header: 0,
+            is_xtoken_from_content_header: 0,
+            is_message_from_content_header: 0,
+            is_multipart_from_content_header: 0,
+            is_not_usual_format_from_content_header: 0,
             content_length: 0,
         }
     }
@@ -134,13 +137,14 @@ impl Hyprlink {
     /// Example: if is_javascript_from_content_header or is_javascript_from_url are true,
     /// then we set is_javascript to true
     pub fn resolve_generics(&mut self) {
-        self.is_html = self.is_html_from_content_header || self.is_html_from_url;
-        self.is_javascript = self.is_javascript_from_content_header || self.is_javascript_from_url;
-        self.is_json = self.is_json_from_content_header || self.is_json_from_url;
-        self.is_css = self.is_css_from_content_header || self.is_css_from_url;
-        self.is_image = self.is_image_from_content_header || self.is_image_from_url;
-        self.is_video = self.is_video_from_content_header || self.is_video_from_url;
-        self.is_audio = self.is_audio_from_content_header || self.is_audio_from_url;
+        self.is_html = format_bool(self.is_html_from_content_header + self.is_html_from_url > 0);
+        self.is_javascript =
+            format_bool(self.is_javascript_from_content_header + self.is_javascript_from_url > 0);
+        self.is_json = format_bool(self.is_json_from_content_header + self.is_json_from_url > 0);
+        self.is_css = format_bool(self.is_css_from_content_header + self.is_css_from_url > 0);
+        self.is_image = format_bool(self.is_image_from_content_header + self.is_image_from_url > 0);
+        self.is_video = format_bool(self.is_video_from_content_header + self.is_video_from_url > 0);
+        self.is_audio = format_bool(self.is_audio_from_content_header + self.is_audio_from_url > 0);
     }
 }
 
@@ -148,11 +152,11 @@ impl Hyprlink {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Vector {
     // Url
-    pub url: String,                                 // ok
-    pub is_ssl_https: bool,                          // ok
-    pub url_entropy: f32,                            // ok
-    pub is_utf8_from_header: bool,                   // ok
-    pub contenttype_header_contains_text_html: bool, // ok
+    pub url: String,                               // ok
+    pub is_ssl_https: u8,                          // ok
+    pub url_entropy: f32,                          // ok
+    pub is_utf8_from_header: u8,                   // ok
+    pub contenttype_header_contains_text_html: u8, // ok
 
     // Links
     pub hyprlinks: Vec<Hyprlink>,          // ok
@@ -166,13 +170,13 @@ pub struct Vector {
     pub link_tag_count: usize, // ok
 
     // HTML
-    pub html_length: usize,              // ok
-    pub html_comments_count: usize,      // ok
-    pub title_tag_in_head_section: bool, // ok
+    pub html_length: usize,            // ok
+    pub html_comments_count: usize,    // ok
+    pub title_tag_in_head_section: u8, // ok
     /// ratio
     pub title_tag_and_url_overlap: f32, // ok
-    pub navbar_present: bool,            // ok
-    pub footer_present: bool,            // ok
+    pub navbar_present: u8,            // ok
+    pub footer_present: u8,            // ok
 
     // JavaScript
     pub javascript_count: usize,                 // ok
@@ -191,10 +195,10 @@ impl Vector {
     pub fn new(url: String) -> Self {
         Vector {
             url,
-            is_ssl_https: false,
+            is_ssl_https: 0,
             url_entropy: 0f32,
-            is_utf8_from_header: false,
-            contenttype_header_contains_text_html: false,
+            is_utf8_from_header: 0,
+            contenttype_header_contains_text_html: 0,
             hyprlinks: vec![],
             hyprlinks_count: 0,
             external_link_count: 0,
@@ -204,10 +208,10 @@ impl Vector {
             link_tag_count: 0,
             html_length: 0,
             html_comments_count: 0,
-            title_tag_in_head_section: false,
+            title_tag_in_head_section: 0,
             title_tag_and_url_overlap: 0f32,
-            navbar_present: false,
-            footer_present: false,
+            navbar_present: 0,
+            footer_present: 0,
             javascript_count: 0,
             samesite_javascript_count: 0,
             external_javascript_count: 0,
@@ -217,4 +221,12 @@ impl Vector {
             javascript_reachable_ratio: 0f32,
         }
     }
+}
+
+pub fn format_bool(b: bool) -> u8 {
+    b as u8
+}
+
+pub fn format_u8(n: u8) -> bool {
+    n == 1
 }

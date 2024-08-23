@@ -7,7 +7,10 @@ use regex::Regex;
 
 use crate::{asyncreq, weburl};
 
-use super::{overlap, vector::Vector};
+use super::{
+    overlap,
+    vector::{format_bool, format_u8, Vector},
+};
 
 lazy_static! {
     // Breakpoints where we check the consumed bytes
@@ -38,8 +41,9 @@ pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result
     // Check headers
     if let Some(val) = req.headers().get("content-type") {
         if let Ok(header) = val.to_str() {
-            vector.contenttype_header_contains_text_html = header.contains("text/html");
-            vector.is_utf8_from_header = header.contains("utf-8");
+            vector.contenttype_header_contains_text_html =
+                format_bool(header.contains("text/html"));
+            vector.is_utf8_from_header = format_bool(header.contains("utf-8"));
         }
     }
 
@@ -86,11 +90,14 @@ pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result
                 }
 
                 if consumed.contains("<nav") {
-                    vector.navbar_present = vector.navbar_present || consumed.contains("<nav");
+                    vector.navbar_present =
+                        format_bool(format_u8(vector.navbar_present) || consumed.contains("<nav"));
                 }
 
                 if consumed.contains("<footer") {
-                    vector.footer_present = vector.footer_present || consumed.contains("<footer");
+                    vector.footer_present = format_bool(
+                        format_u8(vector.footer_present) || consumed.contains("<footer"),
+                    );
                 }
 
                 if consumed.contains("<link") {
@@ -107,8 +114,7 @@ pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result
                     if HTML_TO_SKIP.is_match(&consumed) {
                         // Handle content within <title> tag
                         if let Some(capture) = HTML_TITLE_CONTENT.captures(&consumed) {
-                            println!("{}", &capture[1]);
-                            vector.title_tag_in_head_section = in_head_section;
+                            vector.title_tag_in_head_section = format_bool(in_head_section);
                             vector.title_tag_and_url_overlap =
                                 overlap::calculate_overlap(&capture[1], &vector.url);
                         }
