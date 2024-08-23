@@ -6,6 +6,11 @@ use std::path::PathBuf;
 
 const OUTPUT_DIR: &str = "output";
 
+pub struct Output {
+    pub file: fs::File,
+    pub filepath: PathBuf,
+}
+
 #[derive(Clone, Debug)]
 pub struct ParserOutput {
     pub pathbuf: PathBuf,
@@ -19,9 +24,12 @@ impl ParserOutput {
 
     /// Creates an output file and returns its path
     /// based on the timestamp
-    pub fn create_output(&self) -> Result<fs::File> {
-        let filename = format!("{}", chrono::Utc::now().format("%Y-%m-%d_%H-%M-%S"));
-        Ok(fs::File::create(self.pathbuf.join(filename))?)
+    pub fn create_output(&self) -> Result<Output> {
+        let filename = format!("{}.json", chrono::Utc::now().format("%Y-%m-%d_%H-%M-%S"));
+        let filepath = self.pathbuf.join(filename);
+        let file = fs::File::create(&filepath)?;
+
+        Ok(Output { filepath, file })
     }
 }
 

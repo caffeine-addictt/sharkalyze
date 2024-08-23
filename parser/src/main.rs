@@ -69,6 +69,8 @@ async fn main() -> Result<()> {
         anyhow::bail!("no valid urls found");
     }
 
+    // Ensure output directory exists
+    let output = output::ParserOutput::new()?;
 
     // Progress bar
     let start = Instant::now();
