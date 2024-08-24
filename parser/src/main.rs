@@ -1,14 +1,13 @@
 use anyhow::Result;
-use clap::Parser;
 use futures_util::future::join_all;
 use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
 use lazy_static::lazy_static;
 use parser::vector::Vector;
 use regex::Regex;
 use tokio::sync::Semaphore;
-use url::Url;
 
 use std::collections::HashSet;
+use std::env;
 use std::io::Write;
 use std::sync::Arc;
 use std::time::{Duration, Instant};
@@ -27,47 +26,14 @@ lazy_static! {
         Regex::new(r#"^(class|id|style|data-\w+)\s*=\s*".+"#).unwrap();
 }
 
-/// HTML scrapper and parser
-#[derive(Parser, Debug)]
-#[command(version, about, long_about = None)]
-struct Args {
-    /// Url or file path
-    url_or_path: String,
-
-    /// Whether to run it in debug mode
-    #[arg(short, long, default_value_t = false)]
-    debug: bool,
-
-    /// Whether to run it in quiet mode
-    #[arg(long, default_value_t = false)]
-    quiet: bool,
-}
-
-impl Args {
-    /// Parse url or file and return list of valid urls
-    fn get_urls(&self) -> Result<HashSet<Url>> {
-        match weburl::parse_url(&self.url_or_path) {
-            Ok(url) => Ok(HashSet::from([url])),
-            Err(e) => {
-                if self.debug {
-                    eprintln!(
-                        "failed to parse url due to reason: {e}\n\
-                        falling back to reading as file"
-                    );
-                }
-                Ok(weburl::parse_from_file(&self.url_or_path)?
-                    .into_iter()
-                    .flatten()
-                    .collect())
-            }
-        }
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<()> {
-    let args = Args::parse();
-    let urls = args.get_urls()?;
+    let args: Vec<String> = env::args().collect();
+    if args.len() != 2 {
+        anyhow::bail!("usage: {} <url or path>", args[0]);
+    }
+
+    let urls = weburl::get_urls(&args[1])?;
     if urls.is_empty() {
         anyhow::bail!("no valid urls found");
     }
@@ -93,16 +59,18 @@ async fn main() -> Result<()> {
         let client = client.clone();
         let to_fetch = to_fetch.clone().to_string();
         let formatter = status::Status::new(to_fetch.clone());
+        let spinner_style = spinner_style.clone();
 
-        let prog_bar = multi.add(ProgressBar::new(*status::TERM_WIDTH as u64));
+        let prog_bar = multi.add(ProgressBar::new(1));
         prog_bar.set_style(spinner_style.clone());
-        prog_bar.enable_steady_tick(Duration::from_millis(500));
-
-        prog_bar.set_prefix("[1/5]");
-        prog_bar.set_message(formatter.format("Setting things up..."));
 
         futures.push(tokio::spawn(async move {
             let _permit = semaphore.acquire().await.unwrap();
+            prog_bar.enable_steady_tick(Duration::from_millis(500));
+
+            prog_bar.set_prefix("[1/5]");
+            prog_bar.set_message(formatter.format("Setting things up..."));
+
             match parser::generate_vector(client, to_fetch.to_string(), &prog_bar, &formatter).await
             {
                 Ok(vector) => {
@@ -183,17 +151,13 @@ async fn main() -> Result<()> {
     final_steps_pb.inc(io_write_weight / 2);
     final_steps_pb.finish_with_message("\x1b[32mDone!\x1b[0m");
 
-    if args.quiet {
-        multi.clear()?;
-    } else {
-        println!(
-            "{} urls done in {}.\n{} of {} failed to resolve.",
-            urls.len(),
-            HumanDuration(start.elapsed()),
-            urls.len() - vectors.len(),
-            total_futures
-        );
-    }
+    println!(
+        "{} urls done in {}.\n{} of {} failed to resolve.",
+        urls.len(),
+        HumanDuration(start.elapsed()),
+        urls.len() - vectors.len(),
+        total_futures
+    );
 
     println!("Written to {}", out_file.filepath.display());
 
