@@ -10,7 +10,7 @@ def v1_healthcheck():
 
 
 # route for post to ai
-@app.route(f"{BASE_URL}/qr_analyse", methods=["POST"])
+@app.route(f"{BASE_URL}/qr-analyse", methods=["POST"])
 def qrAnalyse():
     if request.method == "POST":
         request_data = request.get_json(force=True)

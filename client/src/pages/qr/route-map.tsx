@@ -9,7 +9,7 @@ import type { RouteMap } from '@pages/route-map';
 import QrReader from './qr';
 
 const qrRouteMap: RouteMap = {
-  '/qrReader': {
+  '/qr-reader': {
     title: 'QR',
     description: 'Lets Validate',
     component: QrReader,

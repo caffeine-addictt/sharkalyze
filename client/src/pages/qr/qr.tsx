@@ -23,7 +23,7 @@ const QrReader: PageComponent = () => {
     try {
       console.log('sending ...');
       console.log(scannedResult);
-      const response = await fetch('http://localhost:3000/api/v1/qr_analyse', {
+      const response = await fetch('http://localhost:3000/api/v1/qr-analyse', {
         method: 'POST',
         body: JSON.stringify(scannedResult),
         headers: {
