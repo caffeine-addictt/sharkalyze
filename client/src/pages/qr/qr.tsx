@@ -19,26 +19,6 @@ const QrReader: PageComponent = () => {
   // Result
   const [scannedResult, setScannedResult] = useState<string | undefined>('');
 
-  const sendURL = async () => {
-    try {
-      console.log('sending ...');
-      console.log(scannedResult);
-      const response = await fetch('http://localhost:3000/api/v1/qr-analyse', {
-        method: 'POST',
-        body: JSON.stringify(scannedResult),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      const result = await response.json();
-      console.log(result);
-      setResponseMessage(result.message);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
-
   // Success
   const onScanSuccess = (result: QrScanner.ScanResult) => {
     // 🖨 Print the "result" to browser console.
@@ -48,6 +28,29 @@ const QrReader: PageComponent = () => {
   };
 
   useEffect(() => {
+    const sendURL = async () => {
+      try {
+        console.log('sending ...');
+        console.log(scannedResult);
+        const response = await fetch(
+          'http://localhost:3000/api/v1/qr-analyse',
+          {
+            method: 'POST',
+            body: JSON.stringify(scannedResult),
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        );
+
+        const result = await response.json();
+        console.log(result);
+        setResponseMessage(result.message);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
     if (scannedResult) {
       sendURL();
     }
