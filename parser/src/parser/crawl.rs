@@ -30,8 +30,8 @@ lazy_static! {
 
 /// Crawls only the url.
 /// Mutates the vector and returns the discovered urls (not crawled)
-pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result<Vec<String>> {
-    let mut discovered_urls = vec![];
+pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result<HashSet<String>> {
+    let mut discovered_urls = HashSet::new();
 
     let req = asyncreq::make_req(client.get(&vector.url)).await?;
     if !req.status().is_success() {
@@ -66,7 +66,7 @@ pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result
                 // If is a url
                 if let Some(capture) = weburl::HTML_URL.captures(&consumed) {
                     let potential_url = capture[1].trim();
-                    discovered_urls.push(potential_url.to_string());
+                    discovered_urls.insert(potential_url.to_string());
 
                     // Account for href
                     if consumed.contains("href") {
