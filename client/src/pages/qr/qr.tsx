@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { PageComponent } from '@pages/route-map';
 
-// Styles
-import '../../styles/qr.css';
-
 // Qr Scanner
 import QrScanner from 'qr-scanner';
 import QrFrame from '../../assets/qr-frame.svg';
