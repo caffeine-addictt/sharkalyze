@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS
 
 
 def init_app() -> Flask:
@@ -12,5 +13,6 @@ def init_app() -> Flask:
 
 
 app = init_app()
+CORS(app)
 
 __all__ = ["app"]
