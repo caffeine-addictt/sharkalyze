@@ -103,16 +103,16 @@ const QrReader: PageComponent = () => {
   }, [qrOn]);
 
   return (
-    <div className="qr-reader">
+    <div className="relative m-0 h-screen w-full md:w-3/4">
       {/* QR */}
-      <video ref={videoEl}></video>
-      <div ref={qrBoxEl} className="qr-box">
+      <video ref={videoEl} className="size-full object-cover"></video>
+      <div ref={qrBoxEl} className="left-0 w-full">
         <img
           src={QrFrame}
           alt="Qr Frame"
           width={256}
           height={256}
-          className="qr-frame"
+          className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 fill-none"
         />
       </div>
 
