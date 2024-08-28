@@ -11,6 +11,11 @@ python = "^3.12"
 gunicorn = "^23.0.0"
 flask = "^3.0.3"
 flask-cors = "^4.0.1"
+numpy = "^2.1.0"
+pandas = "^2.2.2"
+matplotlib = "^3.9.2"
+seaborn = "^0.13.2"
+scikit-learn = "^1.5.1"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
