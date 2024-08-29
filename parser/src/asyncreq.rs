@@ -3,7 +3,7 @@ use anyhow::Result;
 use reqwest::{RequestBuilder, Response};
 use tokio::sync::Semaphore;
 
-static PERMITS: Semaphore = Semaphore::const_new(20);
+static PERMITS: Semaphore = Semaphore::const_new(100);
 
 /// Make a request in async.
 /// This will acquire a permit and release it after the request is done.
