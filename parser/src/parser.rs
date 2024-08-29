@@ -1,5 +1,9 @@
+use std::sync::Arc;
+
 use anyhow::Result;
+use futures_util::future::join_all;
 use indicatif::ProgressBar;
+use tokio::sync::{Mutex, Semaphore};
 use url::Url;
 
 use crate::{
@@ -36,47 +40,74 @@ pub async fn generate_vector(
     prog_bar.set_prefix("[3/5]");
     prog_bar.set_message(formatter.format("Resolving url..."));
     let discovered_urls = crawl::crawl_page(&client, &mut vector).await?;
+    let to_fetch_num = discovered_urls.len();
 
     prog_bar.set_prefix("[4/5]");
+    prog_bar.set_message(formatter.format(&format!("Resolving url... [0/{to_fetch_num}]")));
     let root_url = Url::parse(url.as_str())?;
-    for discovered_url in &discovered_urls {
-        if let Ok(hyprlink_vector) =
-            generate_hyprlink_vector(&client, discovered_url, &root_url, |s| {
-                prog_bar.set_message(formatter.format(&format!(
-                    "Resolving discovered urls... [{}: {s}]",
-                    &discovered_url
-                )));
-            })
-            .await
-        {
-            if format_u8(hyprlink_vector.is_external) {
-                vector.external_link_count += 1;
-            }
-            if format_u8(hyprlink_vector.is_samesite) {
-                vector.samesite_link_count += 1;
-            }
 
-            // js
-            if format_u8(hyprlink_vector.is_javascript) {
-                vector.javascript_count += 1;
+    // Run concurrently
+    let done = Arc::new(Mutex::new(0));
+    let semaphore = Arc::new(Semaphore::new(20));
+    let mut futures = vec![];
 
+    for to_fetch in &discovered_urls {
+        let semaphore = Arc::clone(&semaphore);
+        let client = client.clone();
+        let root_url = root_url.clone();
+        let done = Arc::clone(&done);
+
+        futures.push(async move {
+            let _permit = semaphore.acquire().await?;
+            if let Ok(hyprlink_vector) =
+                generate_hyprlink_vector(&client, to_fetch, &root_url).await
+            {
                 if format_u8(hyprlink_vector.is_external) {
-                    vector.external_javascript_count += 1;
+                    vector.external_link_count += 1;
                 }
                 if format_u8(hyprlink_vector.is_samesite) {
-                    vector.samesite_javascript_count += 1;
+                    vector.samesite_link_count += 1;
                 }
 
-                if format_u8(hyprlink_vector.is_successful_response) {
-                    vector.javascript_reachable_count += 1;
-                } else {
-                    vector.javascript_unreachable_count += 1;
+                // js
+                if format_u8(hyprlink_vector.is_javascript) {
+                    vector.javascript_count += 1;
+
+                    if format_u8(hyprlink_vector.is_external) {
+                        vector.external_javascript_count += 1;
+                    }
+                    if format_u8(hyprlink_vector.is_samesite) {
+                        vector.samesite_javascript_count += 1;
+                    }
+
+                    if format_u8(hyprlink_vector.is_successful_response) {
+                        vector.javascript_reachable_count += 1;
+                    } else {
+                        vector.javascript_unreachable_count += 1;
+                    }
                 }
+
+                *done.lock().await += 1;
+                prog_bar.set_message(formatter.format(&format!(
+                    "Resolving url... [{}/{to_fetch_num}]",
+                    done.lock().await
+                )));
+
+                return Ok(hyprlink_vector);
             }
 
-            vector.hyprlinks.push(hyprlink_vector);
-        }
+            *done.lock().await += 1;
+            prog_bar.set_message(formatter.format(&format!(
+                "Resolving url... [{}/{to_fetch_num}]",
+                done.lock().await
+            )));
+            Err(anyhow::anyhow!("Failed to fetch {}", to_fetch))
+        })
     }
+
+    // resolve futures
+    let binding = join_all(futures).await;
+    vector.hyprlinks.extend(binding.into_iter().flatten());
 
     prog_bar.set_prefix("[5/5]");
     prog_bar.set_message(formatter.format("Computing ratios..."));
@@ -91,15 +122,11 @@ pub async fn generate_vector(
 }
 
 /// To generate a hyprlink vector
-async fn generate_hyprlink_vector<F>(
+async fn generate_hyprlink_vector(
     client: &reqwest::Client,
     url_str: &str,
     root_url: &Url,
-    set_progress: F,
-) -> Result<vector::Hyprlink>
-where
-    F: Fn(&str),
-{
+) -> Result<vector::Hyprlink> {
     let mut hyprlink = vector::Hyprlink::new(url_str.to_string());
 
     // Account for when url is relative
@@ -127,10 +154,8 @@ where
         hyprlink.is_ssl_https = 1;
     }
 
-    set_progress("Calculating entropy...");
     hyprlink.url_entropy = weburl::calculate_entropy(&url);
 
-    set_progress("Resolving url...");
     let req = asyncreq::make_req(client.get(&url)).await?;
     if !req.status().is_success() {
         hyprlink.is_successful_response = 0;
@@ -138,7 +163,6 @@ where
     }
     hyprlink.is_successful_response = 1;
 
-    set_progress("Checking headers...");
     if let Some(val) = req.headers().get("content-type") {
         if let Ok(header) = val.to_str() {
             // Explicit headers
@@ -173,7 +197,6 @@ where
         }
     }
 
-    set_progress("Checking length...");
     hyprlink.content_length = usize::max(
         req.content_length().unwrap_or(0) as usize,
         req.text().await.unwrap_or(String::new()).len(),
