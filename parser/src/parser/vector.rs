@@ -22,6 +22,7 @@ pub struct Hyprlink {
     pub is_samesite: u8,            // ok
     pub is_external: u8,            // ok
     pub is_successful_response: u8, // ok
+    pub request_timed_out: u8,      // ok
 
     // Generic
     pub is_html: u8,           // ok
@@ -87,6 +88,7 @@ impl Hyprlink {
             is_samesite: 0,
             is_external: 0,
             is_successful_response: 0,
+            request_timed_out: 0,
             is_html: 0,
             is_javascript: 0,
             is_json: 0,
