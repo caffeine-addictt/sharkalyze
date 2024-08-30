@@ -75,7 +75,7 @@ async fn main() -> Result<()> {
 
     // Create client here to share connection pool
     let client = reqwest::Client::new();
-    let semaphore = Arc::new(Semaphore::new(10));
+    let semaphore = Arc::new(Semaphore::new(50));
     let mut futures = vec![];
 
     for to_fetch in &urls {
