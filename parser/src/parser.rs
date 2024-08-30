@@ -1,15 +1,13 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use anyhow::Result;
 use futures_util::future::join_all;
-use indicatif::ProgressBar;
-use tokio::sync::{Mutex, Semaphore};
+use tokio::sync::Semaphore;
 use url::Url;
 
 use crate::{
     asyncreq,
     parser::vector::{format_bool, format_u8},
-    status::Status,
     weburl,
 };
 
@@ -18,12 +16,7 @@ pub mod overlap;
 pub mod vector;
 
 /// Entrypoint for parallel processing
-pub async fn generate_vector(
-    client: reqwest::Client,
-    url: String,
-    prog_bar: &ProgressBar,
-    formatter: &Status,
-) -> Result<vector::Vector> {
+pub async fn generate_vector(client: reqwest::Client, url: String) -> Result<vector::Vector> {
     let mut vector = vector::Vector::new(url.as_str().to_string());
 
     // SSL
@@ -32,22 +25,13 @@ pub async fn generate_vector(
     }
 
     // Calculating entropy
-    prog_bar.set_prefix("[2/5]");
-    prog_bar.set_message(formatter.format("Calculating entropy..."));
     vector.url_entropy = weburl::calculate_entropy(&vector.url);
 
     // Resolve url
-    prog_bar.set_prefix("[3/5]");
-    prog_bar.set_message(formatter.format("Resolving url..."));
     let discovered_urls = crawl::crawl_page(&client, &mut vector).await?;
-    let to_fetch_num = discovered_urls.len();
-
-    prog_bar.set_prefix("[4/5]");
-    prog_bar.set_message(formatter.format(&format!("Resolving url... [0/{to_fetch_num}]")));
     let root_url = Url::parse(url.as_str())?;
 
     // Run concurrently
-    let done = Arc::new(Mutex::new(0));
     let semaphore = Arc::new(Semaphore::new(20));
     let mut futures = vec![];
 
@@ -55,7 +39,6 @@ pub async fn generate_vector(
         let semaphore = Arc::clone(&semaphore);
         let client = client.clone();
         let root_url = root_url.clone();
-        let done = Arc::clone(&done);
 
         futures.push(async move {
             let _permit = semaphore.acquire().await?;
@@ -87,20 +70,9 @@ pub async fn generate_vector(
                     }
                 }
 
-                *done.lock().await += 1;
-                prog_bar.set_message(formatter.format(&format!(
-                    "Resolving url... [{}/{to_fetch_num}]",
-                    done.lock().await
-                )));
-
                 return Ok(hyprlink_vector);
             }
 
-            *done.lock().await += 1;
-            prog_bar.set_message(formatter.format(&format!(
-                "Resolving url... [{}/{to_fetch_num}]",
-                done.lock().await
-            )));
             Err(anyhow::anyhow!("Failed to fetch {}", to_fetch))
         })
     }
@@ -109,8 +81,6 @@ pub async fn generate_vector(
     let binding = join_all(futures).await;
     vector.hyprlinks.extend(binding.into_iter().flatten());
 
-    prog_bar.set_prefix("[5/5]");
-    prog_bar.set_message(formatter.format("Computing ratios..."));
     vector.external_samesite_link_ratio =
         vector.external_link_count as f32 / vector.samesite_link_count as f32;
     vector.javascript_reachable_ratio =
@@ -156,7 +126,18 @@ async fn generate_hyprlink_vector(
 
     hyprlink.url_entropy = weburl::calculate_entropy(&url);
 
-    let req = asyncreq::make_req(client.get(&url)).await?;
+    let req = match asyncreq::make_req(client.get(&url).timeout(Duration::from_secs(30))).await {
+        Ok(req) => req,
+        Err(e) => {
+            if e.is_timeout() {
+                hyprlink.request_timed_out = 1;
+                return Ok(hyprlink);
+            }
+
+            anyhow::bail!(e);
+        }
+    };
+
     if !req.status().is_success() {
         hyprlink.is_successful_response = 0;
         return Ok(hyprlink);

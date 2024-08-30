@@ -1,10 +1,10 @@
 use anyhow::Result;
 use futures_util::future::join_all;
-use indicatif::{HumanDuration, MultiProgress, ProgressBar, ProgressStyle};
+use indicatif::{HumanDuration, ProgressBar, ProgressStyle};
 use lazy_static::lazy_static;
 use parser::vector::Vector;
 use regex::Regex;
-use tokio::sync::Semaphore;
+use tokio::sync::{Mutex, Semaphore};
 
 use std::collections::HashSet;
 use std::env;
@@ -43,10 +43,35 @@ async fn main() -> Result<()> {
 
     // Progress bar
     let start = Instant::now();
-    let multi = MultiProgress::new();
-    let spinner_style =
-        ProgressStyle::with_template("{prefix:.bold.dim} {spinner} {wide_msg} {elapsed_precise}")?
-            .tick_chars("-\\|/");
+    let total_count = urls.len();
+    let error_count = Arc::new(Mutex::new(0));
+    let ok_count = Arc::new(Mutex::new(0));
+
+    let progress_global_track = Arc::new(Mutex::new(ProgressBar::new(total_count as u64)));
+    let spinner_style = ProgressStyle::default_bar()
+        .template(
+            "{spinner} {msg:25} [{wide_bar}] {percent}% ({pos}/{len}) {eta} {elapsed_precise}",
+        )?
+        .progress_chars("#>-")
+        .tick_strings(&["-", "\\", "|", "/"]);
+    progress_global_track
+        .lock()
+        .await
+        .set_style(spinner_style.clone());
+
+    // Global progress bar
+    progress_global_track
+        .lock()
+        .await
+        .enable_steady_tick(Duration::from_millis(500));
+    progress_global_track
+        .lock()
+        .await
+        .set_message(status::format_progress_string(
+            *ok_count.lock().await,
+            *error_count.lock().await,
+            total_count,
+        ));
 
     // Create client here to share connection pool
     let client = reqwest::Client::new();
@@ -58,57 +83,51 @@ async fn main() -> Result<()> {
 
         let client = client.clone();
         let to_fetch = to_fetch.clone().to_string();
-        let formatter = status::Status::new(to_fetch.clone());
-        let spinner_style = spinner_style.clone();
 
-        let prog_bar = multi.add(ProgressBar::new(1));
-        prog_bar.set_style(spinner_style.clone());
+        let ok_count = Arc::clone(&ok_count);
+        let error_count = Arc::clone(&error_count);
+        let progress_global_track = Arc::clone(&progress_global_track);
 
         futures.push(tokio::spawn(async move {
             let _permit = semaphore.acquire().await.unwrap();
-            prog_bar.enable_steady_tick(Duration::from_millis(500));
-
-            prog_bar.set_prefix("[1/5]");
-            prog_bar.set_message(formatter.format("Setting things up..."));
-
-            match parser::generate_vector(client, to_fetch.to_string(), &prog_bar, &formatter).await
-            {
+            match parser::generate_vector(client, to_fetch.to_string()).await {
                 Ok(vector) => {
-                    prog_bar.set_prefix("\x1b[32m[OK]\x1b[0m");
-                    prog_bar.finish_with_message(formatter.format("Done!"));
+                    let prog = progress_global_track.lock().await;
+                    let mut ok_count = ok_count.lock().await;
+                    *ok_count += 1;
 
+                    prog.inc(1);
+                    prog.set_message(status::format_progress_string(
+                        *ok_count,
+                        *error_count.lock().await,
+                        total_count,
+                    ));
                     Some(vector)
                 }
-                Err(e) => {
-                    prog_bar.set_prefix("\x1b[31m[ERR]\x1b[0m");
-                    prog_bar.finish_with_message(
-                        formatter.format(&format!("\x1b[31mFailed [{}]\x1b[0m", e)),
-                    );
+                Err(_) => {
+                    let prog = progress_global_track.lock().await;
+                    let mut error_count = error_count.lock().await;
+                    *error_count += 1;
 
+                    prog.inc(1);
+                    prog.set_message(status::format_progress_string(
+                        *ok_count.lock().await,
+                        *error_count,
+                        total_count,
+                    ));
                     None
                 }
             }
         }));
     }
 
-    let total_futures = futures.len() as u64;
-    let json_stringify_weight = total_futures * 3;
-    let io_write_weight = json_stringify_weight + 20;
-
-    // Create new progress bar
-    let final_steps_pb = multi.add(ProgressBar::new(
-        total_futures + json_stringify_weight + io_write_weight,
-    ));
-    final_steps_pb.set_style(
-        ProgressStyle::with_template(
-            "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}",
-        )
-        .unwrap()
-        .progress_chars("##-"),
-    );
-
     // Collect all parallel processed
     let binding = join_all(futures).await;
+
+    // Create new progress bar
+    let final_steps_pb = ProgressBar::new((total_count * 4) as u64);
+    final_steps_pb.set_style(spinner_style);
+
     let mut vectors: Vec<Vector> = vec![];
 
     final_steps_pb.set_message("Collecting results...");
@@ -122,11 +141,10 @@ async fn main() -> Result<()> {
     final_steps_pb.set_message("Formatting results...");
     let pretty_string = match serde_json::to_string_pretty(&vectors) {
         Ok(s) => {
-            final_steps_pb.inc(json_stringify_weight);
+            final_steps_pb.inc(total_count as u64);
             s
         }
         Err(e) => {
-            final_steps_pb.inc(json_stringify_weight / 2);
             final_steps_pb.finish_with_message("\x1b[31mFailed to format to json\x1b[0m");
             anyhow::bail!("failed to format output due to: {e}");
         }
@@ -135,11 +153,10 @@ async fn main() -> Result<()> {
     final_steps_pb.set_message("Writing results...");
     let mut out_file = match output.create_output() {
         Ok(o) => {
-            final_steps_pb.inc(io_write_weight / 2);
+            final_steps_pb.inc(total_count as u64);
             o
         }
         Err(e) => {
-            final_steps_pb.inc(io_write_weight / 4);
             final_steps_pb.finish_with_message("\x1b[31mFailed to format to json\x1b[0m");
             anyhow::bail!("failed to format output due to: {e}");
         }
@@ -148,15 +165,15 @@ async fn main() -> Result<()> {
     out_file.file.write_all(pretty_string.as_bytes())?;
     out_file.file.sync_all()?;
 
-    final_steps_pb.inc(io_write_weight / 2);
+    final_steps_pb.inc(total_count as u64);
     final_steps_pb.finish_with_message("\x1b[32mDone!\x1b[0m");
 
     println!(
         "{} urls done in {}.\n{} of {} failed to resolve.",
-        urls.len(),
+        total_count,
         HumanDuration(start.elapsed()),
-        urls.len() - vectors.len(),
-        total_futures
+        total_count - vectors.len(),
+        total_count
     );
 
     println!("Written to {}", out_file.filepath.display());
