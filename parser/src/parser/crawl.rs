@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Duration};
 
 use anyhow::Result;
 use futures_util::StreamExt;
@@ -33,7 +33,7 @@ lazy_static! {
 pub async fn crawl_page(client: &reqwest::Client, vector: &mut Vector) -> Result<HashSet<String>> {
     let mut discovered_urls = HashSet::new();
 
-    let req = asyncreq::make_req(client.get(&vector.url)).await?;
+    let req = asyncreq::make_req(client.get(&vector.url).timeout(Duration::from_secs(300))).await?;
     if !req.status().is_success() {
         anyhow::bail!("failed to fetch url");
     }
