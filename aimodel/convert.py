@@ -1,13 +1,29 @@
-# importing required libraries
-
 import pandas as pd
-import warnings
+import json
 
-warnings.filterwarnings("ignore")
+# Load the JSON data
+with open("output/2024-09-02_06-50-26.json", "r", encoding="utf-8") as f:
+    data = json.load(f)
 
-# convert json file to csv file
-json_file_path = "output/"
-df = pd.read_json(json_file_path)
-df["class"] = 1
-csv_file_path = "data.csv"
-df.to_csv(csv_file_path, index=False)
+# Flatten the JSON data
+# The 'hyprlinks' field is nested, so we need to normalize it
+flat_data = pd.json_normalize(
+    data,
+    record_path="hyprlinks",
+    meta=[
+        "url",
+        "is_ssl_https",
+        "url_entropy",
+        "is_utf8_from_header",
+        "contenttype_header_contains_text_html",
+    ],
+    meta_prefix="parent_",
+    errors="ignore",
+)
+
+flat_data["class"] = 0
+# Optional: Save the flattened data to a CSV file
+flat_data.to_csv("good.csv", index=False)
+
+# Display the flattened DataFrame (optional)
+print(flat_data.head())
