@@ -2,7 +2,6 @@ PYTHON:=python
 NPM:=npm
 CARGO:=cargo
 RUSTUP:=rustup
-DOCKER:=docker
 
 ifeq ($(OS),Windows_NT)
 RM_CMD:=rd /s /q
@@ -35,19 +34,12 @@ help:
 ## dev: Start client and server in development mode
 .PHONY: dev
 dev:
-	${DOCKER} compose up --watch --build
+	${NPM} run dev
 
+.PHONY: dev/python
+dev/python:
+	${PYTHON} -m poetry run gunicorn server.src.main:app --reload --bind 0.0.0.0:3000
 
-## prod: Run client server in production mode
-.PHONY: prod
-prod:
-	${DOCKER} compose up --build
-
-
-## down: Kill client and server
-.PHONY: down
-down:
-	${DOCKER} compose down 2> ${NULL}
 
 
 ## install: Install dependencies
@@ -125,7 +117,7 @@ format/npm:
 
 ## clean: Clean up build artifacts
 .PHONY: clean
-clean: clean/python clean/npm clean/cargo clean/docker
+clean: clean/python clean/npm clean/cargo
 	@echo "👍 Cleaned up build artifacts!"
 
 .PHONY: clean/python
@@ -142,21 +134,11 @@ clean/npm:
 clean/cargo:
 	 ${CARGO} clean
 
-.PHONY: clean/docker
-clean/docker:
-	${DOCKER} system prune -f
-
 
 ## tidy: Clean up code artifacts
 .PHONY: tidy
-tidy: tidy/python tidy/docker
+tidy: tidy/python
 	@echo "👍 Cleaned up code artifacts!"
-
-.PHONY: tidy/docker
-tidy/docker: down
-	${DOCKER} compose rm -f 2> ${NULL}
-	${DOCKER} rmi sharkalyze-client 2> ${NULL}
-	${DOCKER} rmi sharkalyze-server 2> ${NULL}
 
 .PHONY: tidy/python
 tidy/python:
