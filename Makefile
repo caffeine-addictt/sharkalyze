@@ -34,11 +34,11 @@ help:
 ## dev: Start client and server in development mode
 .PHONY: dev
 dev:
-	${NPM} run dev
+	trap 'kill 0' SIGINT; \
+	${NPM} run dev & \
+	${PYTHON} -m poetry run gunicorn server.src.main:app --reload --bind 0.0.0.0:3000 & \
+	wait
 
-.PHONY: dev/python
-dev/python:
-	${PYTHON} -m poetry run gunicorn server.src.main:app --reload --bind 0.0.0.0:3000
 
 
 

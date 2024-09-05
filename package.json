@@ -4,7 +4,7 @@
     "lint": "npm run lint --workspaces",
     "lint:fix": "npm run lint:fix --workspaces",
     "test": "npm run test --workspaces",
-    "dev": "npx concurrently -c green,blue 'npm run dev --workspaces' 'make dev/python'",
+    "dev": "npm run dev --workspaces",
     "pre-commit": "make lint"
   },
   "pre-commit": [
@@ -16,7 +16,6 @@
     ]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2",
     "pre-commit": "^1.2.2"
   }
 }

@@ -7,7 +7,7 @@ def init_app() -> Flask:
 
     # Import routes
     with flask_app.app_context():
-        import routes  # noqa: F401
+        from . import routes  # noqa: F401
 
     return flask_app
 
