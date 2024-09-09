@@ -21,15 +21,21 @@ def v1_healthcheck():
 def qrAnalyse():
     request_data = request.get_json(force=True)
 
-    # store input into txt file
     file_path = "server/a.txt"
     with open(file_path, "w") as file:
-        json.dump(request_data, file, indent=4)
+        file.write(request_data)
 
     # cargo run provided url
-    url = "server/a.txt"
-    proc = subprocess.run(["cargo", "run", url], text=True, stdout=subprocess.PIPE)
-    file_path = proc.stdout.splitlines()[2][len("Written to ") :]
+    try:
+        url = "server/a.txt"
+        proc = subprocess.run(
+            ["cargo", "run", url], text=True, stdout=subprocess.PIPE, timeout=120
+        )
+        file_path = proc.stdout.splitlines()[2][len("Written to ") :]
+        print("changed")
+    except Exception as e:
+        return jsonify("URL does not exist")
+        print(e)
 
     # convert file to csv file
     # Load the JSON data
@@ -53,27 +59,47 @@ def qrAnalyse():
     flat_data.to_csv("url.csv", index=False)
 
     # remove unwanted columns
-    df = pd.read_csv("phishing.csv")
+    df = pd.read_csv("url.csv")
     df = df.drop("url", axis=1)
     df = df.drop("parent_url", axis=1)
     df.to_csv("url.csv", index=False)
 
     # predict
-    df = pd.read_csv("phishing.csv")
-    y_pred = gbc_parser.predict(df)[0]
+    df = pd.read_csv("url.csv")
+    print("checkpoint")
+    y_pred = int(gbc_parser.predict(df)[0])
     # 1 is safe
     # -1 is unsafe
-    y_pro_phishing = gbc_parser.predict_proba(df)[0, 0]
-    y_pro_non_phishing = gbc_parser.predict_proba(df)[0, 1]
-    # Format the prediction results
-    pred = "It is {0:.2f}% safe to go".format(y_pro_phishing * 100)
-    # Create the response data
-    response_data = {
+    y_pro_phishing = float(gbc_parser.predict_proba(df)[0, 0])
+    y_pro_non_phishing = float(gbc_parser.predict_proba(df)[0, 1])
+    print(f"y pro : {y_pro_phishing}")
+    print(f"y pred : {y_pred}")
+    print(f"y non pro : {y_pro_non_phishing}")
+    """
+    if (y_pred == 0):
+        pred = y_pro_phishing * 100
+        response_data = {
         "prediction": y_pred,
         "probability_phishing": round(y_pro_phishing, 2),
         "probability_non_phishing": round(y_pro_non_phishing, 2),
         "formatted_message": pred,
     }
+    else:
+        pred = y_pro_non_phishing * 100
+        response_data = {
+        "prediction": y_pred,
+        "probability_phishing": round(y_pro_phishing, 2),
+        "probability_non_phishing": round(y_pro_non_phishing, 2),
+        "formatted_message": pred,
+    }
+    """
+
+    response_data = {
+        "prediction": y_pred,
+        "probability_phishing": round(y_pro_phishing, 2),
+        "probability_non_phishing": round(y_pro_non_phishing, 2),
+    }
 
     # Return JSON response
+    # print(pred)
     return jsonify(response_data), 201

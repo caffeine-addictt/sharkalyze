@@ -16,3 +16,7 @@ app = init_app()
 CORS(app)
 
 __all__ = ["app"]
+
+# Enable debug mode when running the app directly
+if __name__ == "__main__":
+    app.run(debug=True)
