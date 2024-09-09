@@ -10,16 +10,13 @@ const UrlReader: PageComponent = () => {
     try {
       console.log('sending ...');
       console.log(scannedResult);
-      const response = await fetch(
-        'http://localhost:3000/api/v1/qr-analyse',
-        {
-          method: 'POST',
-          body: JSON.stringify(scannedResult),
-          headers: {
-            'Content-Type': 'application/json',
-          },
+      const response = await fetch('http://localhost:3000/api/v1/qr-analyse', {
+        method: 'POST',
+        body: JSON.stringify(scannedResult),
+        headers: {
+          'Content-Type': 'application/json',
         },
-      );
+      });
 
       const result = await response.json();
       console.log(result);
@@ -34,7 +31,7 @@ const UrlReader: PageComponent = () => {
     if (scannedResult) {
       sendURL();
     }
-  }, [scannedResult]); // Trigger useEffect when scannedResult changes
+  }, [scannedResult, sendURL]); // Trigger useEffect when scannedResult changes
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -70,11 +67,11 @@ const UrlReader: PageComponent = () => {
         >
           Scanned Result: {scannedResult}
           {responseMessage && (
-          <>
-            <p style={{ marginTop: '10px', color: 'green' }}>
-              Server response: {responseMessage}
-            </p>
-          </>
+            <>
+              <p style={{ marginTop: '10px', color: 'green' }}>
+                Server response: {responseMessage}
+              </p>
+            </>
           )}
         </p>
       )}
