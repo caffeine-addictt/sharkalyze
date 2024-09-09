@@ -36,7 +36,7 @@ help:
 dev:
 	trap 'kill 0' SIGINT; \
 	${NPM} run dev & \
-	${PYTHON} -m poetry run gunicorn server.src.main:app --reload --bind 0.0.0.0:3000 & \
+	${PYTHON} -m poetry run gunicorn server.src.main:app --reload --preload  --bind 0.0.0.0:3000 --timeout 120 & \
 	wait
 
 
